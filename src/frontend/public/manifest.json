@@ -1,0 +1,22 @@
+{
+  "name": "RYDR - Your City, Your Ride",
+  "short_name": "RYDR",
+  "description": "Smart ride matching. Post or find a ride going your way.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#141414",
+  "theme_color": "#FACC15",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/uploads/file_00000000650c720883073dd037e87b31-1.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/uploads/file_00000000650c720883073dd037e87b31-1.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
