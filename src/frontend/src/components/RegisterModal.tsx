@@ -30,8 +30,11 @@ export function RegisterModal({ open, onClose }: RegisterModalProps) {
       await mutateAsync({ name: name.trim(), avatarUrl });
       toast.success("Profile created! Welcome to RYDR.");
       onClose();
-    } catch {
-      toast.error("Failed to create profile. Please try again.");
+    } catch (err: any) {
+      toast.error(
+        err?.message ||
+          "Profile creation failed. Please sign out and sign back in.",
+      );
     }
   };
 
@@ -86,6 +89,9 @@ export function RegisterModal({ open, onClose }: RegisterModalProps) {
             ) : null}
             {isPending ? "Creating..." : "Create Profile"}
           </Button>
+          <p className="text-xs text-muted-foreground text-center pt-1">
+            If this keeps failing, try signing out and signing back in.
+          </p>
         </form>
       </DialogContent>
     </Dialog>

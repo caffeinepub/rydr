@@ -117,8 +117,10 @@ export function ProfilePage() {
       saveSocialLinks(principalId, { facebookUrl, linkedinUrl });
       toast.success("Profile updated!");
       setIsEditing(false);
-    } catch {
-      toast.error("Failed to update profile.");
+    } catch (err: any) {
+      toast.error(
+        err?.message || "Failed to update profile. Please try again.",
+      );
     }
   };
 

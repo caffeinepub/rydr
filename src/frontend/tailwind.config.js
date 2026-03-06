@@ -17,7 +17,7 @@ export default {
     extend: {
       fontFamily: {
         display: ['"Cabinet Grotesk"', "system-ui", "sans-serif"],
-        sans: ['"Mona Sans"', "system-ui", "sans-serif"],
+        sans: ['"Figtree"', "system-ui", "sans-serif"],
         mono: ['"Geist Mono"', "monospace"],
       },
       colors: {

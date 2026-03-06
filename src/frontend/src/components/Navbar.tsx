@@ -8,13 +8,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, LogIn, LogOut, PlusCircle, User } from "lucide-react";
+import {
+  LayoutDashboard,
+  LogIn,
+  LogOut,
+  PlusCircle,
+  Shield,
+  User,
+} from "lucide-react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useIsAdmin } from "../hooks/useIsAdmin";
 import { useMyProfile } from "../hooks/useQueries";
 
 export function Navbar() {
   const { identity, login, clear, isLoggingIn } = useInternetIdentity();
   const { data: profile } = useMyProfile();
+  const { data: isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const isLoggedIn = !!identity;
 
@@ -28,19 +37,23 @@ export function Navbar() {
     : "?";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg hidden md:block">
       <div className="container flex h-14 items-center justify-between">
-        {/* Logo */}
+        {/* Brand wordmark */}
         <Link
           to="/"
           data-ocid="nav.home_link"
           className="flex items-center hover:opacity-80 transition-opacity"
         >
-          <img
-            src="/assets/uploads/file_00000000650c720883073dd037e87b31-1.png"
-            alt="RYDR"
-            className="h-8 w-auto"
-          />
+          <span
+            className="font-black text-xl tracking-tight text-gradient-brand"
+            style={{
+              fontFamily: '"Cabinet Grotesk", system-ui, sans-serif',
+              fontWeight: 900,
+            }}
+          >
+            Rydr
+          </span>
         </Link>
 
         {/* Nav links */}
@@ -103,6 +116,16 @@ export function Navbar() {
                   <LayoutDashboard className="h-4 w-4 mr-2" />
                   Dashboard
                 </DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenuItem
+                    className="cursor-pointer text-primary focus:text-primary"
+                    onClick={() => navigate({ to: "/admin" })}
+                    data-ocid="nav.admin_link"
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Admin Panel
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   className="cursor-pointer"
                   onClick={() => navigate({ to: "/post-ride" })}

@@ -1,4 +1,5 @@
 import { Heart } from "lucide-react";
+import { AdBanner } from "./AdBanner";
 import { TrustSeal } from "./TrustSeal";
 
 export function Footer() {
@@ -10,6 +11,20 @@ export function Footer() {
   return (
     <footer className="border-t border-border mt-16 py-8">
       <div className="container flex flex-col items-center gap-4 text-sm text-muted-foreground">
+        {/* Footer ad banner */}
+        <div className="w-full flex justify-center mb-4">
+          <AdBanner
+            placement="footer-banner"
+            size="leaderboard"
+            className="hidden md:block"
+          />
+          <AdBanner
+            placement="footer-banner"
+            size="mobile-banner"
+            className="block md:hidden"
+          />
+        </div>
+
         {/* Logo + brand row */}
         <div className="flex items-center gap-2">
           <img

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+import { AdBanner } from "../components/AdBanner";
 import { RideCard } from "../components/RideCard";
 import { TrustSeal } from "../components/TrustSeal";
 import { useSearchRides } from "../hooks/useQueries";
@@ -114,33 +115,25 @@ export function HomePage() {
           minHeight: "65vh",
         }}
       >
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/65" />
+        {/* Dark navy overlay */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to bottom, oklch(0.09 0.03 240 / 0.75) 0%, oklch(0.07 0.02 240 / 0.85) 100%)",
+          }}
+        />
 
-        {/* Yellow tint at bottom for transition */}
+        {/* Navy tint at bottom for transition */}
         <div
           className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none"
           style={{
             background:
-              "linear-gradient(to bottom, transparent, oklch(0.08 0 0))",
+              "linear-gradient(to bottom, transparent, oklch(0.09 0.03 240))",
           }}
         />
 
         <div className="relative container py-20 md:py-28 flex flex-col items-center text-center">
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="mb-6"
-          >
-            <img
-              src="/assets/uploads/file_00000000650c720883073dd037e87b31-1.png"
-              alt="RYDR"
-              className="h-24 w-auto mx-auto drop-shadow-2xl"
-            />
-          </motion.div>
-
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -148,7 +141,7 @@ export function HomePage() {
             className="mb-8"
           >
             <h1 className="font-display text-5xl md:text-7xl font-black tracking-tight mb-4 text-white">
-              Every seat <span className="text-gradient">matters.</span>
+              Every seat <span className="text-gradient-brand">matters.</span>
             </h1>
             <p className="text-xl text-white/80 max-w-xl mx-auto">
               Post your ride or find one — RYDR connects drivers and riders
@@ -321,6 +314,20 @@ export function HomePage() {
         )}
       </AnimatePresence>
 
+      {/* Ad — shown between search results and featured rides, NOT on booking pages */}
+      <div className="container mb-8 flex justify-center">
+        <AdBanner
+          placement="home-banner"
+          size="leaderboard"
+          className="hidden md:flex md:justify-center"
+        />
+        <AdBanner
+          placement="home-banner"
+          size="mobile-banner"
+          className="flex md:hidden justify-center"
+        />
+      </div>
+
       {/* Featured rides (sample content) */}
       {!searchEnabled && (
         <section className="container mb-16 pt-10">
@@ -403,14 +410,14 @@ export function HomePage() {
           className="relative overflow-hidden rounded-2xl border border-primary/30 p-8 md:p-12 text-center"
           style={{
             background:
-              "linear-gradient(135deg, oklch(0.13 0.04 85), oklch(0.1 0 0))",
+              "linear-gradient(135deg, oklch(0.13 0.05 240), oklch(0.09 0.03 240))",
           }}
         >
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                "radial-gradient(ellipse at 50% 50%, oklch(0.85 0.18 85 / 0.08) 0%, transparent 70%)",
+                "radial-gradient(ellipse at 50% 50%, oklch(0.72 0.22 145 / 0.07) 0%, transparent 70%)",
             }}
           />
           <h2 className="font-display text-3xl md:text-4xl font-black mb-3 relative">

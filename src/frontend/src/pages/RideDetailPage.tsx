@@ -144,7 +144,7 @@ export function RideDetailPage() {
             </div>
             <div className="text-right">
               <p className="text-4xl font-display font-black text-primary">
-                ${Number(ride.pricePerSeat)}
+                ₹{Number(ride.pricePerSeat)}
               </p>
               <p className="text-sm text-muted-foreground">per seat</p>
             </div>
@@ -305,7 +305,7 @@ export function RideDetailPage() {
                 <p className="font-medium">Ready to book?</p>
                 <p className="text-sm text-muted-foreground">
                   {seatsAvailable} seat{seatsAvailable !== 1 ? "s" : ""}{" "}
-                  available · ${Number(ride.pricePerSeat)} per seat
+                  available · ₹{Number(ride.pricePerSeat)} per seat
                 </p>
               </div>
               <Button

@@ -27,6 +27,7 @@ import {
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { AdBanner } from "../components/AdBanner";
 import { InteractiveStarRating } from "../components/StarRating";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
@@ -317,6 +318,11 @@ export function DashboardPage() {
         </Tabs>
       </motion.div>
 
+      {/* Ad banner — passenger/driver dashboard */}
+      <div className="mt-8 flex justify-center">
+        <AdBanner placement="passenger-dashboard" size="rectangle" />
+      </div>
+
       {/* Rating Modal */}
       <Dialog
         open={ratingModal.open}
@@ -397,7 +403,7 @@ function RideRow({
         </div>
         <p className="text-sm text-muted-foreground">
           {ride.date} · {ride.departureTime} · {Number(ride.seatsAvailable)}/
-          {Number(ride.totalSeats)} seats · ${Number(ride.pricePerSeat)}/seat
+          {Number(ride.totalSeats)} seats · ₹{Number(ride.pricePerSeat)}/seat
         </p>
       </div>
       <div className="flex items-center gap-2 shrink-0">
