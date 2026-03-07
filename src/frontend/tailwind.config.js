@@ -16,8 +16,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Cabinet Grotesk"', "system-ui", "sans-serif"],
-        sans: ['"Figtree"', "system-ui", "sans-serif"],
+        display: ['"Plus Jakarta Sans"', '"Cabinet Grotesk"', '"Outfit"', "system-ui", "sans-serif"],
+        sans: ['"Plus Jakarta Sans"', '"Outfit"', "system-ui", "sans-serif"],
         mono: ['"Geist Mono"', "monospace"],
       },
       colors: {

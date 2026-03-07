@@ -1,46 +1,53 @@
-# RYDR
+# RYDR – UI Refinement v12
 
 ## Current State
 
-- Full-stack carpooling app on Internet Computer (Motoko backend + React frontend)
-- Dark-first theme: dark navy backgrounds, electric green primary, cyan accent
-- Fonts: Plus Jakarta Sans (headings) + Figtree (body) loaded from Google Fonts
-- Bottom nav does NOT exist -- app uses a top Navbar with dropdown
-- No "Chat" tab or messaging inbox
-- Admin panel at `/admin` uses "first principal" logic -- blocks anyone who didn't first sign in at deployment time; no "Claim Admin" flow exists
-- Welcome page exists with animated logo hero and Proceed button
-- Ride posting is a single-page form (not a step-by-step wizard)
-- Profile page exists but no BlaBlaCar-style "About you / Account" tab structure
+- Dark navy/green theme using Nunito/Nunito Sans fonts
+- WelcomePage: single-screen with floating logo + Proceed button
+- HomePage: search bar + recent searches + AdSense placeholder + sample rides + TrustSeal
+- PostRidePage: 5-step wizard (Route, DateTime, Seats/Price, Preferences, Review)
+- Navbar: "Rydr" wordmark in Cabinet Grotesk gradient
+- Footer: "Made with ❤️ in India" already present, but TrustSeal compact still shows "Data secured on ICP blockchain"
+- TrustSeal component: both variants show ICP blockchain messaging
+- BottomNav: Search, Publish, Your rides, Chat, Profile tabs
+- No location autocomplete — plain text inputs in search and post ride
 
 ## Requested Changes (Diff)
 
 ### Add
-- **BlaBlaCar-style fonts**: Replace current font setup with the exact fonts visible in BlaBlaCar screenshots -- headings use an ultra-bold extra-heavy font (weight 800-900), body uses clean normal-weight. Load `Nunito` (weight 800/900 for headings) and `Inter` (weight 400/500 for body) from Google Fonts -- these most closely match the BlaBlaCar screenshot typography (ultra-rounded heavy headings, clean body). Apply globally.
-- **Bottom navigation bar**: Replace top Navbar on mobile with a fixed bottom nav bar matching BlaBlaCar layout: Search, Publish, Your rides, Chat, Profile -- 5 tabs with icons and labels
-- **Chat tab / messaging inbox**: New `/chat` page showing booking notifications and messages between riders/drivers. Shows list of conversations; each conversation has basic message thread. Accessible via bottom nav "Chat" tab.
-- **"Claim Admin" flow**: On `/admin`, if no admin exists yet (backend returns false for isCallerAdmin), show a "Claim Admin" button. When clicked, call `_initializeAccessControlWithSecret` with a known secret to grant admin to the current user. This allows the app owner to self-serve admin access without needing to know the original deployment principal.
-- **Step-by-step ride posting wizard**: Replace the single PostRide form with multi-step screens matching BlaBlaCar flow: Step 1 Pick-up (full address search input), Step 2 Drop-off, Step 3 Stopovers, Step 4 Date picker (calendar scroll), Step 5 Time picker, Step 6 Seats stepper + passenger options, Step 7 Price stepper with recommended range, Step 8 Booking mode (Instant vs Manual), Step 9 Preferences (pets/smoking/luggage), Step 10 Review & Publish, Step 11 Return ride prompt
+- 3-step onboarding welcome flow replacing single-screen welcome (Screen 1: Welcome to Rydr + Get Started/Login; Screen 2: Find or Share Rides Easily; Screen 3: Safe & Community Driven + Enter App) with smooth swipe/slide animation between steps
+- LocationAutocomplete component using OpenStreetMap Nominatim API — dropdown suggestions, highlight matching text, captures lat/lng in background, mobile friendly, typo-tolerant debounced search
+- Wire LocationAutocomplete into: HomePage search (From/To fields) and PostRidePage Step 0 (origin/destination)
+- Ride posting Step 0 now labeled "Pickup Location", Step 1 "Drop Location" as separate steps for auto-advance UX clarity (keep current 5-step structure but enhance with autocomplete)
+- Progress indicator label: "Step X of 5" (already exists, keep)
 
 ### Modify
-- **Font weights**: Headings must be weight 800+ (extra-bold/black), body stays at 400. Specifically match the visual from BlaBlaCar screenshots where large screen headings like "Pick-up", "When are you going?" are extremely heavy/black weight.
-- **index.html font loading**: Update Google Fonts link to load `Nunito:wght@400;700;800;900` and `Inter:wght@400;500;600` instead of Plus Jakarta Sans + Figtree
-- **tailwind.config.js**: Update `font-display` to Nunito, `font-sans` to Inter
-- **index.css heading styles**: Update `h1-h6` to use Nunito at font-weight 800
-- **App.tsx**: Add `/chat` route; on mobile, hide top Navbar and show bottom nav bar instead; bottom nav tabs: Search (/), Publish (/post-ride), Your rides (/dashboard), Chat (/chat), Profile (/profile)
-- **Admin "Claim Admin"**: On the Access Denied screen, if user is logged in but not admin, show a "Claim Super Admin" button that calls `_initializeAccessControlWithSecret("rydr-admin-2026")`. After calling, refetch isAdmin and redirect to admin panel if successful.
-- **Navbar**: On mobile, hide the top navbar (it's replaced by the bottom nav). On desktop, keep the top navbar.
+- **Global theme**: Change primary color from electric green (oklch 0.72 0.22 145) to Deep Blue (#0B2A4A → oklch 0.19 0.06 240). Accent gradient: Blue #1F7AE0 → Cyan #00AEEF → Green #8BD448. Secondary: Dark Navy #071A2F. Buttons: gradient blue. Cards: white/light with soft shadows on dark background — keep dark theme overall but use blue as primary instead of green.
+- **Typography**: Replace Nunito/Nunito Sans with Poppins. Headings: Poppins ExtraBold (800). Body: Poppins Medium (500). Fallback: Montserrat. Update index.html Google Fonts link. Update tailwind.config.js fontFamily. Update index.css body/heading font stacks.
+- **Navbar**: "Rydr" wordmark → Poppins ExtraBold, white color, slightly expanded letter-spacing (0.05em). Remove gradient text on brand — use plain white.
+- **BottomNav**: Update active color to new primary blue instead of green.
+- **TrustSeal**: Change text from "Your data is secured on the Internet Computer blockchain" / "Data secured on ICP blockchain" to "Verified & Secure Platform" (remove all ICP/blockchain references).
+- **HomePage FEATURES array**: Remove the "Secure & Blockchain" feature card that mentions Internet Computer blockchain. Replace with a neutral "Safe Rides" card.
+- **WelcomePage**: Replace single-screen with 3-step onboarding. Remove ICP trust seal from welcome screen entirely.
+- **PostRidePage**: Rename step titles to match: Step 1 "Pickup Location", Step 2 "Drop Location" (split route into two steps with autocomplete). Adjust TOTAL_STEPS to 6. Steps: Pickup → Drop → Date & Time → Seats & Price → Preferences → Review.
+- **Footer**: TrustSeal compact already shows ICP text — fix via TrustSeal component change.
+- **index.css**: Update CSS variables for primary to blue. Update gradient utilities. Update scrollbar color.
 
 ### Remove
-- Nothing removed -- all existing modules (admin tabs, profile, dashboard, welcome screen, map) remain intact
+- All occurrences of "Internet Computer blockchain", "ICP blockchain", "secured on the Internet Computer" text from UI components
+- WelcomePage trust seal with ICP text
+- FEATURES card "Secure & Blockchain" / "Your data is secured on the Internet Computer blockchain"
 
 ## Implementation Plan
 
-1. Update `index.html` -- swap Google Fonts link from Plus Jakarta Sans + Figtree to Nunito + Inter
-2. Update `tailwind.config.js` -- set font-display to Nunito, font-sans to Inter
-3. Update `index.css` -- set heading font-family to Nunito at weight 800, body to Inter at 400; keep all other tokens and animations intact
-4. Create `src/pages/ChatPage.tsx` -- messaging inbox UI showing mock conversations with booking notifications and message threads between riders/drivers
-5. Create `src/components/BottomNav.tsx` -- fixed bottom nav with 5 tabs: Search, Publish, Your rides, Chat, Profile; active tab highlighted in brand color
-6. Update `src/App.tsx` -- add `/chat` route; wrap layout so bottom nav appears on mobile (hidden on desktop); hide top Navbar on mobile
-7. Update `src/pages/PostRidePage.tsx` -- replace single-form with BlaBlaCar-style multi-step wizard (10 steps as described above)
-8. Update `src/pages/AdminPage.tsx` -- replace Access Denied screen with "Claim Admin" flow: if logged in but not admin, show Claim button that calls `_initializeAccessControlWithSecret`; on success refetch and grant access
-9. Validate and fix all TypeScript/lint errors
+1. **index.html**: Replace Nunito Google Fonts with Poppins + Montserrat
+2. **tailwind.config.js**: Update fontFamily display/sans to Poppins/Montserrat
+3. **index.css**: Update body/heading font declarations; update primary CSS variable from green oklch to blue oklch; update gradient/glow utilities to use blue palette
+4. **config/theme.ts**: Update RYDR_THEME colors to blue palette
+5. **TrustSeal.tsx**: Remove ICP blockchain text → "Verified & Secure Platform"
+6. **components/LocationAutocomplete.tsx**: New component — debounced Nominatim API calls, dropdown list, highlight matching text, onSelect callback with {label, lat, lng}, mobile-friendly, data-ocid markers
+7. **WelcomePage.tsx**: Rewrite as 3-step onboarding with slide animation. Step 1: logo hero + "Welcome to Rydr" + "Your City, Your Ride" + Get Started / Login buttons. Step 2: "Find or Share Rides Easily" + 3 bullet points. Step 3: "Safe & Community Driven" + 3 bullet points + "Enter App" button. Progress dots indicator.
+8. **HomePage.tsx**: Wire LocationAutocomplete into From/To fields; remove "Secure & Blockchain" from FEATURES array; update ICP reference in FEATURES
+9. **PostRidePage.tsx**: Split Step 0 into two steps (Pickup Location + Drop Location), total 6 steps; wire LocationAutocomplete into both location fields; update STEP_TITLES
+10. **Navbar.tsx**: Poppins ExtraBold white wordmark, letter-spacing 0.05em
+11. **BottomNav.tsx**: Update active color to blue

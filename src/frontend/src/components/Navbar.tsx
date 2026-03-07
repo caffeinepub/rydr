@@ -46,10 +46,12 @@ export function Navbar() {
           className="flex items-center hover:opacity-80 transition-opacity"
         >
           <span
-            className="font-black text-xl tracking-tight text-gradient-brand"
+            className="font-black text-xl text-white"
             style={{
-              fontFamily: '"Cabinet Grotesk", system-ui, sans-serif',
-              fontWeight: 900,
+              fontFamily:
+                '"Plus Jakarta Sans", "Outfit", system-ui, sans-serif',
+              fontWeight: 800,
+              letterSpacing: "0.05em",
             }}
           >
             Rydr

@@ -141,7 +141,7 @@ export function usePostRide() {
       approvalMode: ApprovalMode;
     }) => {
       if (!actor) throw new Error("Not connected");
-      return (actor as any).postRide(
+      const result = await (actor as any).postRide(
         params.origin,
         params.destination,
         params.date,
@@ -153,6 +153,8 @@ export function usePostRide() {
         params.luggageAllowed,
         params.approvalMode,
       );
+      if (result && "err" in result) throw new Error(result.err);
+      return result?.ok ?? result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myPostedRides"] });

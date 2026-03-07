@@ -39,9 +39,10 @@ export function Footer() {
         <TrustSeal compact />
 
         {/* Copyright */}
-        <p className="flex items-center gap-1">
-          © {year}. Built with{" "}
-          <Heart className="h-3.5 w-3.5 fill-primary text-primary" /> using{" "}
+        <p className="flex items-center gap-1.5 flex-wrap justify-center text-center">
+          Made with{" "}
+          <Heart className="h-3.5 w-3.5 fill-red-500 text-red-500 shrink-0" />{" "}
+          in India · © {year} RYDR · Built using{" "}
           <a
             href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${hostname}`}
             target="_blank"

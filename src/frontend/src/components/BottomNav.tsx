@@ -80,7 +80,7 @@ export function BottomNav() {
                 aria-current={active ? "page" : undefined}
                 style={{
                   color: active
-                    ? "oklch(0.72 0.22 145)"
+                    ? "oklch(0.55 0.20 240)"
                     : "oklch(0.55 0.02 220)",
                 }}
               >
@@ -94,8 +94,9 @@ export function BottomNav() {
                 <span
                   className="text-[10px] leading-none font-medium"
                   style={{
-                    fontFamily: '"Figtree", system-ui, sans-serif',
-                    fontWeight: active ? 600 : 400,
+                    fontFamily:
+                      '"Plus Jakarta Sans", "Outfit", system-ui, sans-serif',
+                    fontWeight: active ? 700 : 400,
                   }}
                 >
                   {tab.label}

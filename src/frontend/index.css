@@ -2,23 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Fonts ─────────────────────────────────────────────────── */
-/* Cabinet Grotesk — display/headings (ultra-bold black weight matches BlaBlaCar style) */
+/* ─── Self-hosted Fonts ──────────────────────────────────────── */
 @font-face {
-  font-family: "Cabinet Grotesk";
-  src: url("/assets/fonts/CabinetGrotesk-Variable.woff2") format("woff2");
-  font-weight: 100 900;
+  font-family: "Plus Jakarta Sans";
   font-style: normal;
+  font-weight: 200 800;
   font-display: swap;
+  src: url("/assets/fonts/PlusJakartaSans-Variable.woff2") format("woff2");
 }
 
-/* Figtree — body text (clean, friendly, readable) */
 @font-face {
-  font-family: "Figtree";
-  src: url("/assets/fonts/Figtree-Variable.woff2") format("woff2");
-  font-weight: 300 900;
+  font-family: "Outfit";
   font-style: normal;
+  font-weight: 100 900;
   font-display: swap;
+  src: url("/assets/fonts/Outfit-Variable.woff2") format("woff2");
 }
 
 /* ─── Design Tokens ─────────────────────────────────────────── */
@@ -30,51 +28,52 @@
     --transition-fast: 150ms ease;
     --transition-base: 200ms ease;
 
-    /* Dark-first palette: dark navy + electric green + cyan (matching RYDR logo) */
-    --background: 0.09 0.03 240;
+    /* Dark-first palette: deep navy + electric blue + cyan (matching RYDR logo) */
+    --background: 0.08 0.03 240;
     --foreground: 0.97 0 0;
 
-    --card: 0.12 0.03 240;
+    --card: 0.12 0.04 240;
     --card-foreground: 0.97 0 0;
 
-    --popover: 0.14 0.03 240;
+    --popover: 0.14 0.04 240;
     --popover-foreground: 0.97 0 0;
 
-    /* Primary: Electric green (logo swoosh top) */
-    --primary: 0.72 0.22 145;
-    --primary-foreground: 0.08 0 0;
+    /* Primary: Deep blue (#1F7AE0) */
+    --primary: 0.55 0.20 240;
+    --primary-foreground: 0.97 0 0;
 
-    --secondary: 0.17 0.03 240;
+    /* Secondary: Dark navy (#0B2A4A) */
+    --secondary: 0.17 0.04 240;
     --secondary-foreground: 0.97 0 0;
 
-    --muted: 0.16 0.02 240;
+    --muted: 0.16 0.03 240;
     --muted-foreground: 0.55 0.02 220;
 
-    /* Accent: Cyan/teal (logo swoosh bottom) */
+    /* Accent: Cyan (#00AEEF) */
     --accent: 0.72 0.15 195;
     --accent-foreground: 0.08 0 0;
 
     --destructive: 0.65 0.22 25;
     --destructive-foreground: 0.97 0 0;
 
-    --border: 0.25 0.03 240;
-    --input: 0.22 0.03 240;
-    --ring: 0.72 0.22 145;
+    --border: 0.22 0.04 240;
+    --input: 0.20 0.04 240;
+    --ring: 0.55 0.20 240;
 
-    --chart-1: 0.72 0.22 145;
+    --chart-1: 0.55 0.20 240;
     --chart-2: 0.72 0.15 195;
-    --chart-3: 0.65 0.18 170;
-    --chart-4: 0.6 0.14 210;
-    --chart-5: 0.78 0.18 125;
+    --chart-3: 0.65 0.18 160;
+    --chart-4: 0.60 0.14 210;
+    --chart-5: 0.72 0.22 145;
 
     --sidebar: 0.10 0.03 240;
     --sidebar-foreground: 0.97 0 0;
-    --sidebar-primary: 0.72 0.22 145;
-    --sidebar-primary-foreground: 0.08 0 0;
-    --sidebar-accent: 0.17 0.03 240;
+    --sidebar-primary: 0.55 0.20 240;
+    --sidebar-primary-foreground: 0.97 0 0;
+    --sidebar-accent: 0.17 0.04 240;
     --sidebar-accent-foreground: 0.97 0 0;
-    --sidebar-border: 0.25 0.03 240;
-    --sidebar-ring: 0.72 0.22 145;
+    --sidebar-border: 0.22 0.04 240;
+    --sidebar-ring: 0.55 0.20 240;
   }
 
   /* No light override — dark first app */
@@ -82,7 +81,7 @@
   * {
     @apply border-border;
     -webkit-tap-highlight-color: transparent;
-    /* Smooth transitions on color/bg/border/opacity only — avoids layout thrashing */
+    /* Smooth transitions on color/bg/border/opacity only */
     transition-property: color, background-color, border-color, opacity;
     transition-duration: 150ms;
     transition-timing-function: ease;
@@ -94,15 +93,15 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: "Figtree", system-ui, sans-serif;
-    font-weight: 400;
+    font-family: "Plus Jakarta Sans", "Outfit", system-ui, sans-serif;
+    font-weight: 500;
     -webkit-font-smoothing: antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: "Cabinet Grotesk", system-ui, sans-serif;
+    font-family: "Plus Jakarta Sans", "Outfit", system-ui, sans-serif;
     font-weight: 800;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
   }
 }
 
@@ -124,38 +123,38 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.72 0.22 145 / 0.4);
+  background: oklch(0.55 0.20 240 / 0.4);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.72 0.22 145 / 0.7);
+  background: oklch(0.55 0.20 240 / 0.7);
 }
 
 /* ─── Utility classes ─────────────────────────────────────────── */
 .glow-primary {
-  box-shadow: 0 0 20px oklch(0.72 0.22 145 / 0.4);
+  box-shadow: 0 0 20px oklch(0.55 0.20 240 / 0.4);
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, oklch(0.72 0.22 145), oklch(0.72 0.15 195));
+  background: linear-gradient(135deg, oklch(0.55 0.20 240), oklch(0.72 0.15 195));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .text-gradient-brand {
-  background: linear-gradient(135deg, oklch(0.72 0.22 145), oklch(0.72 0.15 195));
+  background: linear-gradient(135deg, oklch(0.55 0.20 240), oklch(0.72 0.15 195));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .bg-gradient-brand {
-  background: linear-gradient(135deg, oklch(0.72 0.22 145), oklch(0.72 0.15 195));
+  background: linear-gradient(135deg, oklch(0.55 0.20 240), oklch(0.72 0.15 195));
 }
 
 .shadow-glow-brand {
-  box-shadow: 0 0 30px oklch(0.72 0.22 145 / 0.3), 0 0 60px oklch(0.72 0.15 195 / 0.15);
+  box-shadow: 0 0 30px oklch(0.55 0.20 240 / 0.3), 0 0 60px oklch(0.72 0.15 195 / 0.15);
 }
 
 .card-hover {
@@ -163,16 +162,16 @@
 }
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px oklch(0.72 0.22 145 / 0.2);
-  border-color: oklch(0.72 0.22 145 / 0.3);
+  box-shadow: 0 8px 32px oklch(0.55 0.20 240 / 0.2);
+  border-color: oklch(0.55 0.20 240 / 0.3);
 }
 
 .btn-glow {
-  box-shadow: 0 0 20px oklch(0.72 0.22 145 / 0.4);
+  box-shadow: 0 0 20px oklch(0.55 0.20 240 / 0.4);
   transition: box-shadow 0.2s ease;
 }
 .btn-glow:hover {
-  box-shadow: 0 0 30px oklch(0.72 0.22 145 / 0.6);
+  box-shadow: 0 0 30px oklch(0.55 0.20 240 / 0.6);
 }
 
 /* ─── Welcome page animations ────────────────────────────────── */
@@ -202,8 +201,8 @@
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px oklch(0.72 0.22 145 / 0.4); }
-  50% { box-shadow: 0 0 35px oklch(0.72 0.22 145 / 0.7); }
+  0%, 100% { box-shadow: 0 0 20px oklch(0.55 0.20 240 / 0.4); }
+  50% { box-shadow: 0 0 35px oklch(0.55 0.20 240 / 0.7); }
 }
 
 .animate-glow-pulse {

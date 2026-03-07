@@ -13,7 +13,7 @@ export function TrustSeal({ className = "", compact = false }: TrustSealProps) {
         data-ocid="trust.seal"
       >
         <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-        <span>Data secured on ICP blockchain</span>
+        <span>Verified &amp; Secure Platform</span>
       </div>
     );
   }
@@ -24,7 +24,7 @@ export function TrustSeal({ className = "", compact = false }: TrustSealProps) {
       data-ocid="trust.seal"
     >
       <ShieldCheck className="h-4 w-4 shrink-0" />
-      <span>Your data is secured on the Internet Computer blockchain</span>
+      <span>Your data is safe &amp; secure</span>
     </div>
   );
 }
