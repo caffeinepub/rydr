@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { LocationAutocomplete } from "../components/LocationAutocomplete";
 import type { LocationResult } from "../components/LocationAutocomplete";
 import { useActor } from "../hooks/useActor";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useInternetIdentity } from "../hooks/useGoogleAuth";
 import { usePostRide } from "../hooks/useQueries";
 import type { ApprovalMode } from "../types";
 

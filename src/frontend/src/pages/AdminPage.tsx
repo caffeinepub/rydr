@@ -48,7 +48,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { useActor } from "../hooks/useActor";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useInternetIdentity } from "../hooks/useGoogleAuth";
 import { useIsAdmin } from "../hooks/useIsAdmin";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -1542,18 +1542,13 @@ export function AdminPage() {
                 </p>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                This admin panel uses{" "}
-                <strong className="text-foreground">Internet Identity</strong> —
-                ICP's decentralised login system. There is no username or
-                password.
+                This admin panel uses Google authentication. Sign in with your
+                Google account to access the admin panel.
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Admin access is granted to the{" "}
-                <strong className="text-foreground">
-                  first account that signed in
-                </strong>{" "}
-                when this app was deployed. If you are the app owner, sign in
-                with that Internet Identity principal.
+                Admin access is automatically granted to{" "}
+                <strong className="text-foreground">aman5875@gmail.com</strong>.
+                Sign in with that Google account to manage the platform.
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 After signing in, return to{" "}

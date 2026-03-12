@@ -60,6 +60,53 @@ export function useUpdateProfile() {
   });
 }
 
+export function useUpdateUserProfile() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      name: string;
+      avatarUrl: string;
+      city: string;
+      about: string;
+      chatPref: string;
+      petsPreference: string;
+      smokingPreference: string;
+      luggagePreference: string;
+      carBrand: string;
+      carColor: string;
+      vehicleType: string;
+      licensePlate: string;
+      facebookUrl: string;
+      linkedinUrl: string;
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      const result = await actor.updateUserProfile(
+        params.name,
+        params.avatarUrl,
+        params.city,
+        params.about,
+        params.chatPref,
+        params.petsPreference,
+        params.smokingPreference,
+        params.luggagePreference,
+        params.carBrand,
+        params.carColor,
+        params.vehicleType,
+        params.licensePlate,
+        params.facebookUrl,
+        params.linkedinUrl,
+      );
+      if (result && "err" in result) throw new Error(result.err);
+      return result?.ok ?? result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    },
+  });
+}
+
 export function useGetUserProfile(userId: string | undefined) {
   const { actor, isFetching } = useActor();
   return useQuery<UserPublic | null>({

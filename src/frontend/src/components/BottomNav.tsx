@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Car, MessageCircle, PlusCircle, Search, User } from "lucide-react";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useInternetIdentity } from "../hooks/useGoogleAuth";
 import { useMyProfile } from "../hooks/useQueries";
 
 type NavTab = {

@@ -36,6 +36,18 @@ export type UserPublic = {
   id: Principal;
   name: string;
   avatarUrl: string;
+  city: string;
+  about: string;
+  chatPref: string;
+  petsPreference: string;
+  smokingPreference: string;
+  luggagePreference: string;
+  carBrand: string;
+  carColor: string;
+  vehicleType: string;
+  licensePlate: string;
+  facebookUrl: string;
+  linkedinUrl: string;
   averageRating: number;
   ratingCount: bigint;
 };
@@ -51,6 +63,13 @@ export interface backendInterface {
   registerUser(name: string, avatarUrl: string): Promise<UserPublic>;
   getMyProfile(): Promise<[] | [UserPublic]>;
   getUserProfile(userId: Principal): Promise<[] | [UserPublic]>;
+  updateUserProfile(
+    name: string, avatarUrl: string, city: string, about: string,
+    chatPref: string, petsPreference: string, smokingPreference: string,
+    luggagePreference: string, carBrand: string, carColor: string,
+    vehicleType: string, licensePlate: string, facebookUrl: string,
+    linkedinUrl: string
+  ): Promise<{ ok: UserPublic } | { err: string }>;
 
   postRide(
     origin: string,

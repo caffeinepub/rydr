@@ -12,7 +12,7 @@ import { BottomNav } from "./components/BottomNav";
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
 import { RegisterModal } from "./components/RegisterModal";
-import { useInternetIdentity } from "./hooks/useInternetIdentity";
+import { useInternetIdentity } from "./hooks/useGoogleAuth";
 import { useMyProfile } from "./hooks/useQueries";
 import { HomePage } from "./pages/HomePage";
 import { WelcomePage } from "./pages/WelcomePage";
@@ -35,6 +35,11 @@ const AdminPage = lazy(() =>
 );
 const ChatPage = lazy(() =>
   import("./pages/ChatPage").then((m) => ({ default: m.ChatPage })),
+);
+const UserProfileViewPage = lazy(() =>
+  import("./pages/UserProfileViewPage").then((m) => ({
+    default: m.UserProfileViewPage,
+  })),
 );
 
 // Fallback loading state for lazy-loaded pages
@@ -154,6 +159,16 @@ const profileRoute = createRoute({
   component: ProfilePage,
 });
 
+const userProfileViewRoute = createRoute({
+  getParentRoute: () => mainRoute,
+  path: "/profile/$userId",
+  component: () => (
+    <Suspense fallback={<PageFallback />}>
+      <UserProfileViewPage />
+    </Suspense>
+  ),
+});
+
 const adminRoute = createRoute({
   getParentRoute: () => standaloneRoute,
   path: "/admin",
@@ -174,6 +189,7 @@ const routeTree = rootRoute.addChildren([
     postRideRoute,
     dashboardRoute,
     profileRoute,
+    userProfileViewRoute,
     chatRoute,
   ]),
 ]);

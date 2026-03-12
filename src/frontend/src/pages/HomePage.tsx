@@ -18,7 +18,7 @@ import { AdBanner } from "../components/AdBanner";
 import { LocationAutocomplete } from "../components/LocationAutocomplete";
 import type { LocationResult } from "../components/LocationAutocomplete";
 import { RideCard } from "../components/RideCard";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useInternetIdentity } from "../hooks/useGoogleAuth";
 import { useSearchRides } from "../hooks/useQueries";
 
 const RYDR_SEARCHES_KEY = "rydr_recent_searches";

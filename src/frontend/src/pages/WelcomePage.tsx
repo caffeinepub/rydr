@@ -11,8 +11,8 @@ import {
   Zap,
 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useGoogleAuth } from "../hooks/useGoogleAuth";
 
 /* ─── Particles ────────────────────────────────────────────── */
 const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
@@ -162,17 +162,17 @@ function BulletRow({
 /* ─── Main WelcomePage ──────────────────────────────────────── */
 export function WelcomePage() {
   const navigate = useNavigate();
-  const { login, isLoggingIn } = useInternetIdentity();
+  const { login, isLoggingIn, isAuthenticated } = useGoogleAuth();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const reduceMotion = useReducedMotion();
 
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
 
-  const goNext = () => {
+  const goNext = useCallback(() => {
     setDirection(1);
     setStep((s) => s + 1);
-  };
+  }, []);
 
   const goBack = () => {
     setDirection(-1);
@@ -183,10 +183,16 @@ export function WelcomePage() {
     goNext();
   };
 
-  const handleLogin = async () => {
-    await login();
-    goNext();
+  const handleLogin = () => {
+    login();
   };
+
+  // When user completes login via the modal, advance to next step
+  useEffect(() => {
+    if (isAuthenticated && step === 0) {
+      goNext();
+    }
+  }, [isAuthenticated, step, goNext]);
 
   const handleEnterApp = () => {
     localStorage.setItem("rydr_welcomed", "1");
@@ -320,7 +326,7 @@ export function WelcomePage() {
                       >
                         <img
                           src="/assets/uploads/file_00000000650c720883073dd037e87b31-1.png"
-                          alt="RYDR \u2014 Your City, Your Ride"
+                          alt="RYDR — Your City, Your Ride"
                           className="w-52 sm:w-64 md:w-72 h-auto mx-auto"
                           loading="eager"
                           decoding="async"
@@ -383,7 +389,7 @@ export function WelcomePage() {
                         background: "oklch(0.55 0.20 240 / 0.08)",
                       }}
                     >
-                      {isLoggingIn ? "Signing in\u2026" : "Login"}
+                      {isLoggingIn ? "Signing in…" : "Login"}
                     </motion.button>
                   </div>
                 </div>

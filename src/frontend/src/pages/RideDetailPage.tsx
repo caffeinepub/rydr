@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
   AlertCircle,
   ArrowLeft,
@@ -23,7 +23,7 @@ import { motion } from "motion/react";
 import { toast } from "sonner";
 import { RideMap } from "../components/RideMap";
 import { StarRating } from "../components/StarRating";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useInternetIdentity } from "../hooks/useGoogleAuth";
 import {
   useBookRide,
   useGetUserProfile,
@@ -238,7 +238,12 @@ export function RideDetailPage() {
             <h3 className="font-display font-bold text-sm mb-3 uppercase tracking-wider text-muted-foreground">
               Driver
             </h3>
-            <div className="flex items-center gap-4">
+            <Link
+              to="/profile/$userId"
+              params={{ userId: ride.driverId.toString() }}
+              className="flex items-center gap-4 group"
+              data-ocid="ride.driver_link"
+            >
               <Avatar className="h-14 w-14">
                 <AvatarImage src={driver.avatarUrl} />
                 <AvatarFallback className="bg-secondary text-secondary-foreground font-bold text-lg">
@@ -246,7 +251,15 @@ export function RideDetailPage() {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-display font-black text-lg">{driver.name}</p>
+                <p className="font-display font-black text-lg group-hover:text-primary transition-colors">
+                  {driver.name}
+                </p>
+                {driver.city && (
+                  <p className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                    <MapPin className="h-3 w-3" />
+                    {driver.city}
+                  </p>
+                )}
                 <div className="flex items-center gap-2 mt-0.5">
                   <StarRating rating={driver.averageRating} size="md" />
                   <span className="text-sm font-medium">
@@ -257,7 +270,7 @@ export function RideDetailPage() {
                   </span>
                 </div>
               </div>
-            </div>
+            </Link>
           </div>
         )}
 

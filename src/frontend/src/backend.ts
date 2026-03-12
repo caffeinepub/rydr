@@ -38,6 +38,18 @@ export type UserPublic = {
   id: Principal;
   name: string;
   avatarUrl: string;
+  city: string;
+  about: string;
+  chatPref: string;
+  petsPreference: string;
+  smokingPreference: string;
+  luggagePreference: string;
+  carBrand: string;
+  carColor: string;
+  vehicleType: string;
+  licensePlate: string;
+  facebookUrl: string;
+  linkedinUrl: string;
   averageRating: number;
   ratingCount: bigint;
 };
@@ -52,6 +64,13 @@ export interface backendInterface {
   registerUser(name: string, avatarUrl: string): Promise<UserPublic>;
   getMyProfile(): Promise<[] | [UserPublic]>;
   getUserProfile(userId: Principal): Promise<[] | [UserPublic]>;
+  updateUserProfile(
+    name: string, avatarUrl: string, city: string, about: string,
+    chatPref: string, petsPreference: string, smokingPreference: string,
+    luggagePreference: string, carBrand: string, carColor: string,
+    vehicleType: string, licensePlate: string, facebookUrl: string,
+    linkedinUrl: string
+  ): Promise<{ ok: UserPublic } | { err: string }>;
   postRide(
     origin: string, destination: string, date: string, departureTime: string,
     totalSeats: bigint, pricePerSeat: bigint,
@@ -116,6 +135,18 @@ const idlFactory = ({ IDL: I }: { IDL: typeof IDL }) => {
     id: I.Principal,
     name: I.Text,
     avatarUrl: I.Text,
+    city: I.Text,
+    about: I.Text,
+    chatPref: I.Text,
+    petsPreference: I.Text,
+    smokingPreference: I.Text,
+    luggagePreference: I.Text,
+    carBrand: I.Text,
+    carColor: I.Text,
+    vehicleType: I.Text,
+    licensePlate: I.Text,
+    facebookUrl: I.Text,
+    linkedinUrl: I.Text,
     averageRating: I.Float64,
     ratingCount: I.Nat,
   });
@@ -150,6 +181,7 @@ const idlFactory = ({ IDL: I }: { IDL: typeof IDL }) => {
   const RideResult = I.Variant({ ok: Ride, err: I.Text });
   const BookingResult = I.Variant({ ok: Booking, err: I.Text });
   const OkResult = I.Variant({ ok: I.Null, err: I.Text });
+  const UserResult = I.Variant({ ok: UserPublic, err: I.Text });
 
   return I.Service({
     _initializeAccessControlWithSecret: I.Func([I.Text], [], []),
@@ -159,6 +191,11 @@ const idlFactory = ({ IDL: I }: { IDL: typeof IDL }) => {
     registerUser: I.Func([I.Text, I.Text], [UserPublic], []),
     getMyProfile: I.Func([], [I.Opt(UserPublic)], ["query"]),
     getUserProfile: I.Func([I.Principal], [I.Opt(UserPublic)], ["query"]),
+    updateUserProfile: I.Func(
+      [I.Text, I.Text, I.Text, I.Text, I.Text, I.Text, I.Text, I.Text,
+       I.Text, I.Text, I.Text, I.Text, I.Text, I.Text],
+      [UserResult], []
+    ),
     postRide: I.Func(
       [I.Text, I.Text, I.Text, I.Text, I.Nat, I.Nat, I.Bool, I.Bool, I.Bool, ApprovalMode],
       [RideResult], []

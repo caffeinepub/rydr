@@ -10,12 +10,29 @@ actor {
   public type RideStatus    = { #active; #completed; #cancelled };
   public type BookingStatus = { #pending; #confirmed; #rejected };
 
+  // Original User type — kept exactly as deployed to preserve stable variable compatibility
   public type User = {
     id               : Principal;
     name             : Text;
     avatarUrl        : Text;
     totalRatingPoints: Nat;
     ratingCount      : Nat;
+  };
+
+  // Extended profile fields stored separately to avoid stable-variable migration
+  public type UserExt = {
+    city             : Text;
+    about            : Text;
+    chatPref         : Text;    // "chatty" | "quiet" | ""
+    petsPreference   : Text;    // "allowed" | "not_allowed" | ""
+    smokingPreference: Text;    // "allowed" | "not_allowed" | ""
+    luggagePreference: Text;    // "allowed" | "limited" | "none" | ""
+    carBrand         : Text;
+    carColor         : Text;
+    vehicleType      : Text;    // "hatchback" | "sedan" | "suv" | ""
+    licensePlate     : Text;
+    facebookUrl      : Text;
+    linkedinUrl      : Text;
   };
 
   public type Ride = {
@@ -45,23 +62,38 @@ actor {
     createdAt  : Int;
   };
 
+  // Combined public view merging User + UserExt
   public type UserPublic = {
-    id           : Principal;
-    name         : Text;
-    avatarUrl    : Text;
-    averageRating: Float;
-    ratingCount  : Nat;
+    id               : Principal;
+    name             : Text;
+    avatarUrl        : Text;
+    city             : Text;
+    about            : Text;
+    chatPref         : Text;
+    petsPreference   : Text;
+    smokingPreference: Text;
+    luggagePreference: Text;
+    carBrand         : Text;
+    carColor         : Text;
+    vehicleType      : Text;
+    licensePlate     : Text;
+    facebookUrl      : Text;
+    linkedinUrl      : Text;
+    averageRating    : Float;
+    ratingCount      : Nat;
   };
 
-  type UserEntry = (Principal, User);
+  type UserEntry    = (Principal, User);
+  type UserExtEntry = (Principal, UserExt);
 
   // ===== State =====
   var accessControlState = AccessControl.initState();
-  var users         : [UserEntry] = [];
-  var rides         : [Ride]      = [];
-  var bookings      : [Booking]   = [];
-  var nextRideId    : Nat         = 1;
-  var nextBookingId : Nat         = 1;
+  var users         : [UserEntry]    = [];  // original stable var — type unchanged
+  var usersExt      : [UserExtEntry] = [];  // new stable var for extended fields
+  var rides         : [Ride]         = [];
+  var bookings      : [Booking]      = [];
+  var nextRideId    : Nat            = 1;
+  var nextBookingId : Nat            = 1;
 
   // ===== Helpers =====
   func textContains(haystack : Text, needle : Text) : Bool {
@@ -76,10 +108,43 @@ actor {
     }
   };
 
+  func getUserExt(p : Principal) : UserExt {
+    switch (usersExt.find(func(entry : UserExtEntry) : Bool { let (id, _) = entry; id == p })) {
+      case (?(_, e)) e;
+      case null {
+        {
+          city = ""; about = ""; chatPref = "";
+          petsPreference = ""; smokingPreference = ""; luggagePreference = "";
+          carBrand = ""; carColor = ""; vehicleType = "";
+          licensePlate = ""; facebookUrl = ""; linkedinUrl = "";
+        }
+      };
+    }
+  };
+
   func userToPublic(u : User) : UserPublic {
+    let ext = getUserExt(u.id);
     let avg : Float = if (u.ratingCount == 0) 0.0
                       else u.totalRatingPoints.toFloat() / u.ratingCount.toFloat();
-    { id = u.id; name = u.name; avatarUrl = u.avatarUrl; averageRating = avg; ratingCount = u.ratingCount }
+    {
+      id                = u.id;
+      name              = u.name;
+      avatarUrl         = u.avatarUrl;
+      city              = ext.city;
+      about             = ext.about;
+      chatPref          = ext.chatPref;
+      petsPreference    = ext.petsPreference;
+      smokingPreference = ext.smokingPreference;
+      luggagePreference = ext.luggagePreference;
+      carBrand          = ext.carBrand;
+      carColor          = ext.carColor;
+      vehicleType       = ext.vehicleType;
+      licensePlate      = ext.licensePlate;
+      facebookUrl       = ext.facebookUrl;
+      linkedinUrl       = ext.linkedinUrl;
+      averageRating     = avg;
+      ratingCount       = u.ratingCount;
+    }
   };
 
   // ===== Auth =====
@@ -111,6 +176,53 @@ actor {
     let filtered = users.filter(func(entry : UserEntry) : Bool { let (id, _) = entry; id != caller });
     users := [filtered, [(caller, updated)]].flatten();
     userToPublic(updated)
+  };
+
+  public shared ({ caller }) func updateUserProfile(
+    name             : Text,
+    avatarUrl        : Text,
+    city             : Text,
+    about            : Text,
+    chatPref         : Text,
+    petsPreference   : Text,
+    smokingPreference: Text,
+    luggagePreference: Text,
+    carBrand         : Text,
+    carColor         : Text,
+    vehicleType      : Text,
+    licensePlate     : Text,
+    facebookUrl      : Text,
+    linkedinUrl      : Text
+  ) : async { #ok : UserPublic; #err : Text } {
+    if (name == "") return #err("Name is required");
+
+    // Update core User record (name + avatarUrl)
+    let updatedUser : User = switch (getUser(caller)) {
+      case (?u) { { u with name = name; avatarUrl = avatarUrl } };
+      case null  { { id = caller; name = name; avatarUrl = avatarUrl; totalRatingPoints = 0; ratingCount = 0 } };
+    };
+    let filteredUsers = users.filter(func(e : UserEntry) : Bool { let (id, _) = e; id != caller });
+    users := [filteredUsers, [(caller, updatedUser)]].flatten();
+
+    // Update extended UserExt record
+    let updatedExt : UserExt = {
+      city             = city;
+      about            = about;
+      chatPref         = chatPref;
+      petsPreference   = petsPreference;
+      smokingPreference= smokingPreference;
+      luggagePreference= luggagePreference;
+      carBrand         = carBrand;
+      carColor         = carColor;
+      vehicleType      = vehicleType;
+      licensePlate     = licensePlate;
+      facebookUrl      = facebookUrl;
+      linkedinUrl      = linkedinUrl;
+    };
+    let filteredExt = usersExt.filter(func(e : UserExtEntry) : Bool { let (id, _) = e; id != caller });
+    usersExt := [filteredExt, [(caller, updatedExt)]].flatten();
+
+    #ok(userToPublic(updatedUser))
   };
 
   public query ({ caller }) func getMyProfile() : async ?UserPublic {

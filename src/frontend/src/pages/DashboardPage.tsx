@@ -29,7 +29,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { AdBanner } from "../components/AdBanner";
 import { InteractiveStarRating } from "../components/StarRating";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useInternetIdentity } from "../hooks/useGoogleAuth";
 import {
   useApproveBooking,
   useBookingRequestsForDriver,
