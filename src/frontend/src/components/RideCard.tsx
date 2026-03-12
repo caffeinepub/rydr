@@ -30,7 +30,7 @@ export function RideCard({ ride, driver, index = 1 }: RideCardProps) {
   return (
     <div
       data-ocid={`search.ride.item.${index}`}
-      className="bg-card border border-border rounded-lg p-4 card-hover group"
+      className="bg-card border border-[#00AEEF]/30 rounded-lg p-4 card-hover group shadow-[0_0_8px_rgba(0,174,239,0.1)]"
     >
       {/* Route */}
       <div className="flex items-center gap-3 mb-4">
@@ -55,7 +55,7 @@ export function RideCard({ ride, driver, index = 1 }: RideCardProps) {
         </div>
         <div className="text-right shrink-0">
           <p className="text-2xl font-display font-black text-primary">
-            ${Number(ride.pricePerSeat)}
+            &#8377;{Number(ride.pricePerSeat)}
           </p>
           <p className="text-xs text-muted-foreground">per seat</p>
         </div>
@@ -65,7 +65,7 @@ export function RideCard({ ride, driver, index = 1 }: RideCardProps) {
       <div className="flex flex-wrap gap-3 mb-4 text-sm text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <Clock className="h-3.5 w-3.5" />
-          {ride.date} · {ride.departureTime}
+          {ride.date} &middot; {ride.departureTime}
         </span>
         <span className="flex items-center gap-1.5">
           <Users className="h-3.5 w-3.5" />

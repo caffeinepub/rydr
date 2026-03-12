@@ -1,0 +1,461 @@
+import { O as createLucideIcon, r as reactExports, j as jsxRuntimeExports, q as LoaderCircle, M as MapPin, af as useParams, V as useNavigate, h as useInternetIdentity, ag as useRideDetail, k as useMyBookings, ah as useGetUserProfile, ai as useBookRide, S as Skeleton, B as Button, t as motion, y as Clock, a0 as Users, a1 as PawPrint, a2 as Cigarette, a3 as Briefcase, g as cn, a4 as Zap, a5 as ClipboardCheck, aa as Avatar, ab as AvatarImage, ac as AvatarFallback, ad as StarRating, K as ue } from "./index-jWWoVaVf.js";
+import { a as isRideActive, c as isBookingConfirmed, i as isBookingPending, d as getBookingStatusLabel } from "./index-DkmPAu21.js";
+import { A as ArrowLeft } from "./arrow-left-EmiCCNYV.js";
+import { B as Banknote } from "./banknote--HiaA4NX.js";
+import { C as CircleCheckBig } from "./circle-check-big-qa1E49hH.js";
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["line", { x1: "12", x2: "12", y1: "8", y2: "12", key: "1pkeuh" }],
+  ["line", { x1: "12", x2: "12.01", y1: "16", y2: "16", key: "4dfq90" }]
+];
+const CircleAlert = createLucideIcon("circle-alert", __iconNode);
+async function geocode(address) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`;
+    const res = await fetch(url, {
+      headers: { "Accept-Language": "en" }
+    });
+    const data = await res.json();
+    if (data && data.length > 0) {
+      return {
+        lat: Number.parseFloat(data[0].lat),
+        lon: Number.parseFloat(data[0].lon)
+      };
+    }
+  } catch {
+  }
+  return null;
+}
+function RideMap({ origin, destination }) {
+  const mapRef = reactExports.useRef(null);
+  const [loading, setLoading] = reactExports.useState(true);
+  const [error, setError] = reactExports.useState(null);
+  const leafletMapRef = reactExports.useRef(null);
+  reactExports.useEffect(() => {
+    let cancelled = false;
+    const initMap = async () => {
+      if (!mapRef.current) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const L = await new Promise((resolve, reject) => {
+          if (window.L) {
+            resolve(window.L);
+            return;
+          }
+          const script = document.createElement("script");
+          script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+          script.onload = () => resolve(window.L);
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+        delete L.Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+          iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+          shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png"
+        });
+        if (cancelled) return;
+        const [originCoords, destCoords] = await Promise.all([
+          geocode(origin),
+          geocode(destination)
+        ]);
+        if (cancelled) return;
+        if (!originCoords || !destCoords) {
+          setError("Could not geocode one or both locations.");
+          setLoading(false);
+          return;
+        }
+        if (leafletMapRef.current) {
+          leafletMapRef.current.remove();
+          leafletMapRef.current = null;
+        }
+        const midLat = (originCoords.lat + destCoords.lat) / 2;
+        const midLon = (originCoords.lon + destCoords.lon) / 2;
+        const map = L.map(mapRef.current, { zoomControl: true });
+        leafletMapRef.current = map;
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap contributors",
+          maxZoom: 18
+        }).addTo(map);
+        const originIcon = L.divIcon({
+          html: `<div style="width:12px;height:12px;background:#FACC15;border-radius:50%;border:2px solid white;box-shadow:0 0 8px rgba(250,204,21,0.6)"></div>`,
+          className: "",
+          iconSize: [12, 12],
+          iconAnchor: [6, 6]
+        });
+        const destIcon = L.divIcon({
+          html: `<div style="width:12px;height:12px;background:#F59E0B;border-radius:50%;border:2px solid white;box-shadow:0 0 8px rgba(245,158,11,0.6)"></div>`,
+          className: "",
+          iconSize: [12, 12],
+          iconAnchor: [6, 6]
+        });
+        L.marker([originCoords.lat, originCoords.lon], { icon: originIcon }).addTo(map).bindPopup(`<b>From:</b> ${origin}`);
+        L.marker([destCoords.lat, destCoords.lon], { icon: destIcon }).addTo(map).bindPopup(`<b>To:</b> ${destination}`);
+        const line = L.polyline(
+          [
+            [originCoords.lat, originCoords.lon],
+            [destCoords.lat, destCoords.lon]
+          ],
+          {
+            color: "#FACC15",
+            weight: 3,
+            opacity: 0.85,
+            dashArray: "8, 6"
+          }
+        ).addTo(map);
+        map.fitBounds(line.getBounds(), { padding: [40, 40] });
+        map.setView([midLat, midLon]);
+        setLoading(false);
+      } catch (_err) {
+        if (!cancelled) {
+          setError("Failed to load map.");
+          setLoading(false);
+        }
+      }
+    };
+    initMap();
+    return () => {
+      cancelled = true;
+      if (leafletMapRef.current) {
+        leafletMapRef.current.remove();
+        leafletMapRef.current = null;
+      }
+    };
+  }, [origin, destination]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      className: "relative rounded-lg overflow-hidden border border-border bg-card",
+      style: { height: "300px" },
+      children: [
+        loading && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "div",
+          {
+            className: "absolute inset-0 flex items-center justify-center bg-card z-10",
+            "data-ocid": "ride.map_loading_state",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center gap-2 text-muted-foreground", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-6 w-6 animate-spin text-primary" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm", children: "Loading map..." })
+            ] })
+          }
+        ),
+        error && !loading && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "div",
+          {
+            className: "absolute inset-0 flex items-center justify-center bg-card z-10",
+            "data-ocid": "ride.map_error_state",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center gap-2 text-muted-foreground text-sm text-center px-4", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(MapPin, { className: "h-6 w-6 text-muted-foreground" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: error }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs", children: [
+                origin,
+                " → ",
+                destination
+              ] })
+            ] })
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "div",
+          {
+            ref: mapRef,
+            className: "w-full h-full",
+            "data-ocid": "ride.map_marker",
+            style: { minHeight: "300px" }
+          }
+        )
+      ]
+    }
+  );
+}
+function RideDetailPage() {
+  var _a;
+  const { rideId } = useParams({ strict: false });
+  const navigate = useNavigate();
+  const { identity } = useInternetIdentity();
+  const isLoggedIn = !!identity;
+  const rideIdBigInt = rideId ? BigInt(rideId) : void 0;
+  const { data: ride, isLoading: rideLoading } = useRideDetail(rideIdBigInt);
+  const { data: myBookings } = useMyBookings();
+  const { data: driver } = useGetUserProfile((_a = ride == null ? void 0 : ride.driverId) == null ? void 0 : _a.toString());
+  const { mutateAsync: bookRide, isPending: isBooking } = useBookRide();
+  const myBookingForRide = myBookings == null ? void 0 : myBookings.find((b) => b.rideId === rideIdBigInt);
+  const handleBook = async () => {
+    if (!rideIdBigInt) return;
+    try {
+      await bookRide(rideIdBigInt);
+      ue.success("Ride booked successfully!");
+    } catch (err) {
+      ue.error((err == null ? void 0 : err.message) || "Failed to book ride");
+    }
+  };
+  if (rideLoading) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "main",
+      {
+        className: "container py-8 max-w-3xl px-4 sm:px-6",
+        "data-ocid": "ride.loading_state",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-48 mb-6" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-64 w-full mb-4" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-32 w-full" })
+        ]
+      }
+    );
+  }
+  if (!ride) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "main",
+      {
+        className: "container py-8 max-w-3xl px-4 sm:px-6",
+        "data-ocid": "ride.error_state",
+        children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center py-16", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(CircleAlert, { className: "h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-40" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-xl font-display font-bold mb-2", children: "Ride not found" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Button,
+            {
+              variant: "outline",
+              onClick: () => navigate({ to: "/" }),
+              className: "mt-4",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "h-4 w-4 mr-2" }),
+                "Back to Search"
+              ]
+            }
+          )
+        ] })
+      }
+    );
+  }
+  const isInstant = "instant" in ride.approvalMode;
+  const isActive = isRideActive(ride.status);
+  const seatsAvailable = Number(ride.seatsAvailable);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "container py-8 max-w-3xl px-4 sm:px-6", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    motion.div,
+    {
+      initial: { opacity: 0, y: 16 },
+      animate: { opacity: 1, y: 0 },
+      transition: { duration: 0.4 },
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Button,
+          {
+            variant: "ghost",
+            size: "sm",
+            onClick: () => navigate({ to: "/" }),
+            className: "mb-6 gap-2 text-muted-foreground",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "h-4 w-4" }),
+              "Back to Search"
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-card border border-border rounded-xl p-6 mb-6", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between mb-6", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-4", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center gap-1 mt-1", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-3 h-3 rounded-full bg-primary" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-px h-10 bg-border" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-3 h-3 rounded-full border-2 border-primary" })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground uppercase tracking-wider mb-0.5", children: "From" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xl font-display font-bold", children: ride.origin })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground uppercase tracking-wider mb-0.5", children: "To" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xl font-display font-bold", children: ride.destination })
+                ] })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-right", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-4xl font-display font-black text-primary", children: [
+                "₹",
+                Number(ride.pricePerSeat)
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground", children: "per seat" })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 text-sm", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Clock, { className: "h-4 w-4 text-muted-foreground" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground", children: "Date" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-medium", children: ride.date })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 text-sm", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Clock, { className: "h-4 w-4 text-muted-foreground" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground", children: "Time" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-medium", children: ride.departureTime })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 text-sm", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Users, { className: "h-4 w-4 text-muted-foreground" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground", children: "Seats Left" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-medium", children: [
+                  seatsAvailable,
+                  " / ",
+                  Number(ride.totalSeats)
+                ] })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 text-sm", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Banknote, { className: "h-4 w-4 text-muted-foreground" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground", children: "Approval" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-medium", children: isInstant ? "Instant" : "Manual" })
+              ] })
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-card border border-border rounded-xl p-4 mb-6", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-display font-bold text-sm mb-3 uppercase tracking-wider text-muted-foreground", children: "Ride Preferences" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              PreferenceItem,
+              {
+                allowed: ride.petsAllowed,
+                label: "Pets Allowed",
+                icon: /* @__PURE__ */ jsxRuntimeExports.jsx(PawPrint, { className: "h-4 w-4" })
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              PreferenceItem,
+              {
+                allowed: ride.smokingAllowed,
+                label: "Smoking Allowed",
+                icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Cigarette, { className: "h-4 w-4" })
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              PreferenceItem,
+              {
+                allowed: ride.luggageAllowed,
+                label: "Luggage Allowed",
+                icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Briefcase, { className: "h-4 w-4" })
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "div",
+              {
+                className: cn(
+                  "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm border",
+                  isInstant ? "bg-primary/10 border-primary/30 text-primary" : "bg-secondary border-border text-foreground"
+                ),
+                children: [
+                  isInstant ? /* @__PURE__ */ jsxRuntimeExports.jsx(Zap, { className: "h-4 w-4" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(ClipboardCheck, { className: "h-4 w-4" }),
+                  isInstant ? "Instant Booking" : "Needs Approval"
+                ]
+              }
+            )
+          ] })
+        ] }),
+        driver && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-card border border-border rounded-xl p-4 mb-6", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-display font-bold text-sm mb-3 uppercase tracking-wider text-muted-foreground", children: "Driver" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-4", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(Avatar, { className: "h-14 w-14", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(AvatarImage, { src: driver.avatarUrl }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(AvatarFallback, { className: "bg-secondary text-secondary-foreground font-bold text-lg", children: driver.name.slice(0, 2).toUpperCase() })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display font-black text-lg", children: driver.name }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 mt-0.5", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(StarRating, { rating: driver.averageRating, size: "md" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-medium", children: driver.averageRating.toFixed(1) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm text-muted-foreground", children: [
+                  "(",
+                  Number(driver.ratingCount),
+                  " ratings)"
+                ] })
+              ] })
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-6", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-display font-bold text-sm mb-3 uppercase tracking-wider text-muted-foreground", children: "Route" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(RideMap, { origin: ride.origin, destination: ride.destination })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-card border border-border rounded-xl p-4", children: !isLoggedIn ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center py-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mb-3", children: "Sign in to book this ride" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: () => navigate({ to: "/" }), variant: "outline", children: "Sign In to Book" })
+        ] }) : myBookingForRide ? /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            className: "flex items-center gap-3",
+            "data-ocid": "ride.booking_status",
+            children: [
+              isBookingConfirmed(myBookingForRide.status) ? /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheckBig, { className: "h-5 w-5 text-primary shrink-0" }) : isBookingPending(myBookingForRide.status) ? /* @__PURE__ */ jsxRuntimeExports.jsx(Clock, { className: "h-5 w-5 text-muted-foreground shrink-0" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(CircleAlert, { className: "h-5 w-5 text-destructive shrink-0" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-medium", children: [
+                  "Booking ",
+                  getBookingStatusLabel(myBookingForRide.status)
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground", children: isBookingConfirmed(myBookingForRide.status) ? "Your seat is confirmed. Have a great trip!" : isBookingPending(myBookingForRide.status) ? "Waiting for driver approval." : "Your booking was rejected." })
+              ] })
+            ]
+          }
+        ) : isActive && seatsAvailable > 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-medium", children: "Ready to book?" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm text-muted-foreground", children: [
+              seatsAvailable,
+              " seat",
+              seatsAvailable !== 1 ? "s" : "",
+              " ",
+              "available · ₹",
+              Number(ride.pricePerSeat),
+              " per seat"
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Button,
+            {
+              onClick: handleBook,
+              disabled: isBooking,
+              className: "gap-2 shrink-0",
+              "data-ocid": "ride.book_button",
+              children: [
+                isBooking ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-4 w-4 animate-spin" }) : null,
+                isBooking ? "Booking..." : "Book Seat"
+              ]
+            }
+          )
+        ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-center py-4 text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: !isActive ? "This ride is no longer active." : "No seats available." }) }) })
+      ]
+    }
+  ) });
+}
+function PreferenceItem({
+  allowed,
+  label,
+  icon
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      className: cn(
+        "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm border",
+        allowed ? "bg-primary/10 border-primary/30 text-primary" : "bg-secondary border-border text-muted-foreground line-through opacity-60"
+      ),
+      children: [
+        icon,
+        label
+      ]
+    }
+  );
+}
+export {
+  RideDetailPage
+};

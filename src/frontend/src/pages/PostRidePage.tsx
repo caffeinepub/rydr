@@ -155,7 +155,7 @@ export function PostRidePage() {
 
   if (!identity) {
     return (
-      <main className="container py-16 max-w-lg text-center">
+      <main className="container py-16 max-w-lg text-center px-4 sm:px-6">
         <Car className="h-12 w-12 mx-auto mb-4 text-primary" />
         <h1 className="font-display text-2xl font-black mb-2">
           Sign in to post a ride
@@ -195,7 +195,7 @@ export function PostRidePage() {
   const progressPct = ((step + 1) / TOTAL_STEPS) * 100;
 
   return (
-    <main className="container py-6 max-w-lg">
+    <main className="container py-6 max-w-lg px-4 sm:px-6">
       {/* Header with back button + progress */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-4">

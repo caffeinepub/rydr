@@ -286,7 +286,7 @@ export function WelcomePage() {
       />
 
       {/* Step content area */}
-      <div className="relative z-10 w-full max-w-md px-6 flex flex-col items-center">
+      <div className="relative z-10 w-full max-w-md px-4 sm:px-6 flex flex-col items-center">
         <div className="w-full overflow-hidden">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
@@ -302,24 +302,8 @@ export function WelcomePage() {
               {/* ── Step 0: Welcome ─────────────────────────── */}
               {step === 0 && (
                 <div className="flex flex-col items-center w-full">
-                  {/* Logo with glow */}
+                  {/* Logo — clean, no glow, just float + scale animation */}
                   <div className="relative mb-6">
-                    <div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        width: "280px",
-                        height: "280px",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        background:
-                          "radial-gradient(circle, oklch(0.55 0.20 240 / 0.35) 0%, transparent 70%)",
-                        filter: "blur(60px)",
-                        opacity: 0.4,
-                        borderRadius: "50%",
-                      }}
-                      aria-hidden="true"
-                    />
                     <div
                       className="animate-float"
                       style={{ willChange: "transform" }}
@@ -336,14 +320,10 @@ export function WelcomePage() {
                       >
                         <img
                           src="/assets/uploads/file_00000000650c720883073dd037e87b31-1.png"
-                          alt="RYDR — Your City, Your Ride"
+                          alt="RYDR \u2014 Your City, Your Ride"
                           className="w-52 sm:w-64 md:w-72 h-auto mx-auto"
                           loading="eager"
                           decoding="async"
-                          style={{
-                            filter:
-                              "drop-shadow(0 0 40px oklch(0.55 0.20 240 / 0.45)) drop-shadow(0 0 80px oklch(0.72 0.15 195 / 0.25)) drop-shadow(0 8px 32px rgba(0,0,0,0.6))",
-                          }}
                         />
                       </motion.div>
                     </div>
@@ -403,7 +383,7 @@ export function WelcomePage() {
                         background: "oklch(0.55 0.20 240 / 0.08)",
                       }}
                     >
-                      {isLoggingIn ? "Signing in…" : "Login"}
+                      {isLoggingIn ? "Signing in\u2026" : "Login"}
                     </motion.button>
                   </div>
                 </div>

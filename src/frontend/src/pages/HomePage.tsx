@@ -2,14 +2,23 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "@tanstack/react-router";
-import { Car, Clock, MapPin, Search, Shield, Users, Zap } from "lucide-react";
+import {
+  Car,
+  Clock,
+  LogIn,
+  MapPin,
+  Search,
+  Shield,
+  Users,
+  Zap,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { AdBanner } from "../components/AdBanner";
 import { LocationAutocomplete } from "../components/LocationAutocomplete";
 import type { LocationResult } from "../components/LocationAutocomplete";
 import { RideCard } from "../components/RideCard";
-import { TrustSeal } from "../components/TrustSeal";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useSearchRides } from "../hooks/useQueries";
 
 const RYDR_SEARCHES_KEY = "rydr_recent_searches";
@@ -103,6 +112,7 @@ const FEATURES = [
 
 export function HomePage() {
   const navigate = useNavigate();
+  const { identity, login } = useInternetIdentity();
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [date, setDate] = useState("");
@@ -147,7 +157,6 @@ export function HomePage() {
     setOrigin(s.origin);
     setDestination(s.destination);
     setDate(s.date);
-    // Clear coords when applying recent search
     setOriginCoords(null);
     setDestCoords(null);
   };
@@ -186,7 +195,7 @@ export function HomePage() {
             className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full"
             style={{
               background:
-                "radial-gradient(ellipse, oklch(0.55 0.20 240 / 0.06) 0%, transparent 70%)",
+                "radial-gradient(ellipse, oklch(0.69 0.15 220 / 0.06) 0%, transparent 70%)",
               filter: "blur(40px)",
             }}
           />
@@ -212,7 +221,7 @@ export function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.08 }}
-            className="bg-card border border-border rounded-2xl p-4 shadow-lg"
+            className="bg-card border border-[#00AEEF]/40 rounded-2xl p-4 shadow-lg"
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1">
@@ -280,6 +289,32 @@ export function HomePage() {
             </div>
           </motion.form>
 
+          {/* Login CTA — shown only when not signed in */}
+          {!identity && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.18 }}
+              className="mt-3"
+            >
+              <Button
+                type="button"
+                size="lg"
+                onClick={() => login()}
+                className="w-full gap-2 h-11 font-semibold"
+                style={{
+                  background: "#00AEEF",
+                  color: "#fff",
+                  boxShadow: "0 4px 16px rgba(0,174,239,0.3)",
+                }}
+                data-ocid="home.login_button"
+              >
+                <LogIn className="h-4 w-4" />
+                Sign In to Book Rides
+              </Button>
+            </motion.div>
+          )}
+
           {/* Recent searches */}
           {recentSearches.length > 0 && (
             <motion.div
@@ -307,14 +342,14 @@ export function HomePage() {
                     key={`${s.origin}-${s.destination}`}
                     type="button"
                     onClick={() => applyRecentSearch(s)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card hover:border-primary/40 hover:bg-primary/5 text-sm transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#00AEEF]/30 bg-card hover:border-[#00AEEF]/60 hover:bg-primary/5 text-sm transition-colors"
                     data-ocid={
                       `search.recent_search.${i + 1}` as `search.recent_search.${number}`
                     }
                   >
                     <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
                     <span className="text-muted-foreground truncate max-w-[180px]">
-                      {s.origin} → {s.destination}
+                      {s.origin} &rarr; {s.destination}
                     </span>
                   </button>
                 ))}
@@ -348,7 +383,7 @@ export function HomePage() {
           >
             <h2 className="font-display text-xl font-black mb-4">
               {isLoading
-                ? "Searching…"
+                ? "Searching\u2026"
                 : searchResults && searchResults.length > 0
                   ? `${searchResults.length} ride${searchResults.length !== 1 ? "s" : ""} found`
                   : "No rides found"}
@@ -362,7 +397,7 @@ export function HomePage() {
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="bg-card border border-border rounded-lg p-4 space-y-3"
+                    className="bg-card border border-[#00AEEF]/20 rounded-lg p-4 space-y-3"
                   >
                     <Skeleton className="h-4 w-3/4" />
                     <Skeleton className="h-4 w-1/2" />
@@ -438,7 +473,7 @@ export function HomePage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-card border border-border rounded-xl p-4 card-hover"
+                className="bg-card border border-[#00AEEF]/30 rounded-xl p-4 card-hover shadow-[0_0_8px_rgba(0,174,239,0.08)]"
                 data-ocid={
                   `home.ride.item.${i + 1}` as `home.ride.item.${number}`
                 }
@@ -463,19 +498,19 @@ export function HomePage() {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-2xl font-display font-black text-primary">
-                      ₹{r.price}
+                      &#8377;{r.price}
                     </p>
                     <p className="text-xs text-muted-foreground">per seat</p>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mb-3">
-                  {r.date} · {r.time} · {r.seats} seats
+                  {r.date} &middot; {r.time} &middot; {r.seats} seats
                 </p>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium">{r.driver}</p>
                     <p className="text-xs text-muted-foreground">
-                      ⭐ {r.rating} · {r.trips} trips
+                      &#11088; {r.rating} &middot; {r.trips} trips
                     </p>
                   </div>
                 </div>
@@ -495,7 +530,7 @@ export function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08 }}
-              className="bg-card border border-border rounded-xl p-4"
+              className="bg-card border border-[#00AEEF]/20 rounded-xl p-4"
             >
               <div className="text-primary mb-3">{f.icon}</div>
               <h3 className="font-display font-bold text-sm mb-1">{f.title}</h3>
@@ -507,7 +542,7 @@ export function HomePage() {
 
       {/* ── CTA strip ───────────────────────────────────────── */}
       <section className="container mb-8">
-        <div className="flex items-center justify-between p-5 md:p-8 rounded-2xl border border-primary/20 bg-card">
+        <div className="flex items-center justify-between p-5 md:p-8 rounded-2xl border border-[#00AEEF]/20 bg-card">
           <div>
             <h2 className="font-display text-xl md:text-2xl font-black mb-1">
               Ready to ride smarter?
@@ -537,11 +572,6 @@ export function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Trust seal */}
-      <div className="container mb-6 flex justify-center">
-        <TrustSeal />
-      </div>
     </main>
   );
 }

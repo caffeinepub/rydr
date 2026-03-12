@@ -76,7 +76,7 @@ export function DashboardPage() {
 
   if (!identity) {
     return (
-      <main className="container py-16 max-w-lg text-center">
+      <main className="container py-16 max-w-lg text-center px-4 sm:px-6">
         <LayoutDashboard className="h-12 w-12 mx-auto mb-4 text-primary" />
         <h1 className="font-display text-2xl font-black mb-2">
           Sign in to view dashboard
@@ -148,7 +148,7 @@ export function DashboardPage() {
   };
 
   return (
-    <main className="container py-8 max-w-4xl">
+    <main className="container py-8 max-w-4xl px-4 sm:px-6">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}

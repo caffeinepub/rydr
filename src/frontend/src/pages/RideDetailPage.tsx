@@ -64,7 +64,10 @@ export function RideDetailPage() {
 
   if (rideLoading) {
     return (
-      <main className="container py-8 max-w-3xl" data-ocid="ride.loading_state">
+      <main
+        className="container py-8 max-w-3xl px-4 sm:px-6"
+        data-ocid="ride.loading_state"
+      >
         <Skeleton className="h-8 w-48 mb-6" />
         <Skeleton className="h-64 w-full mb-4" />
         <Skeleton className="h-32 w-full" />
@@ -74,7 +77,10 @@ export function RideDetailPage() {
 
   if (!ride) {
     return (
-      <main className="container py-8 max-w-3xl" data-ocid="ride.error_state">
+      <main
+        className="container py-8 max-w-3xl px-4 sm:px-6"
+        data-ocid="ride.error_state"
+      >
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-40" />
           <h2 className="text-xl font-display font-bold mb-2">
@@ -98,7 +104,7 @@ export function RideDetailPage() {
   const seatsAvailable = Number(ride.seatsAvailable);
 
   return (
-    <main className="container py-8 max-w-3xl">
+    <main className="container py-8 max-w-3xl px-4 sm:px-6">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}

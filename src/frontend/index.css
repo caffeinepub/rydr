@@ -28,7 +28,7 @@
     --transition-fast: 150ms ease;
     --transition-base: 200ms ease;
 
-    /* Dark-first palette: deep navy + electric blue + cyan (matching RYDR logo) */
+    /* Dark-first palette: deep navy + sky blue + cyan (matching RYDR logo) */
     --background: 0.08 0.03 240;
     --foreground: 0.97 0 0;
 
@@ -38,9 +38,9 @@
     --popover: 0.14 0.04 240;
     --popover-foreground: 0.97 0 0;
 
-    /* Primary: Deep blue (#1F7AE0) */
-    --primary: 0.55 0.20 240;
-    --primary-foreground: 0.97 0 0;
+    /* Primary: Sky Blue (#00AEEF) → oklch(0.69 0.15 220) */
+    --primary: 0.69 0.15 220;
+    --primary-foreground: 1 0 0;
 
     /* Secondary: Dark navy (#0B2A4A) */
     --secondary: 0.17 0.04 240;
@@ -58,9 +58,9 @@
 
     --border: 0.22 0.04 240;
     --input: 0.20 0.04 240;
-    --ring: 0.55 0.20 240;
+    --ring: 0.69 0.15 220;
 
-    --chart-1: 0.55 0.20 240;
+    --chart-1: 0.69 0.15 220;
     --chart-2: 0.72 0.15 195;
     --chart-3: 0.65 0.18 160;
     --chart-4: 0.60 0.14 210;
@@ -68,12 +68,12 @@
 
     --sidebar: 0.10 0.03 240;
     --sidebar-foreground: 0.97 0 0;
-    --sidebar-primary: 0.55 0.20 240;
-    --sidebar-primary-foreground: 0.97 0 0;
+    --sidebar-primary: 0.69 0.15 220;
+    --sidebar-primary-foreground: 1 0 0;
     --sidebar-accent: 0.17 0.04 240;
     --sidebar-accent-foreground: 0.97 0 0;
     --sidebar-border: 0.22 0.04 240;
-    --sidebar-ring: 0.55 0.20 240;
+    --sidebar-ring: 0.69 0.15 220;
   }
 
   /* No light override — dark first app */
@@ -92,6 +92,7 @@
   }
 
   body {
+    overflow-x: hidden;
     @apply bg-background text-foreground;
     font-family: "Plus Jakarta Sans", "Outfit", system-ui, sans-serif;
     font-weight: 500;
@@ -123,38 +124,38 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.55 0.20 240 / 0.4);
+  background: oklch(0.69 0.15 220 / 0.4);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.55 0.20 240 / 0.7);
+  background: oklch(0.69 0.15 220 / 0.7);
 }
 
 /* ─── Utility classes ─────────────────────────────────────────── */
 .glow-primary {
-  box-shadow: 0 0 20px oklch(0.55 0.20 240 / 0.4);
+  box-shadow: 0 0 20px oklch(0.69 0.15 220 / 0.4);
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, oklch(0.55 0.20 240), oklch(0.72 0.15 195));
+  background: linear-gradient(135deg, oklch(0.69 0.15 220), oklch(0.72 0.15 195));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .text-gradient-brand {
-  background: linear-gradient(135deg, oklch(0.55 0.20 240), oklch(0.72 0.15 195));
+  background: linear-gradient(135deg, oklch(0.69 0.15 220), oklch(0.72 0.15 195));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .bg-gradient-brand {
-  background: linear-gradient(135deg, oklch(0.55 0.20 240), oklch(0.72 0.15 195));
+  background: linear-gradient(135deg, oklch(0.69 0.15 220), oklch(0.72 0.15 195));
 }
 
 .shadow-glow-brand {
-  box-shadow: 0 0 30px oklch(0.55 0.20 240 / 0.3), 0 0 60px oklch(0.72 0.15 195 / 0.15);
+  box-shadow: 0 0 30px oklch(0.69 0.15 220 / 0.3), 0 0 60px oklch(0.72 0.15 195 / 0.15);
 }
 
 .card-hover {
@@ -162,16 +163,16 @@
 }
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px oklch(0.55 0.20 240 / 0.2);
-  border-color: oklch(0.55 0.20 240 / 0.3);
+  box-shadow: 0 8px 32px rgba(0, 174, 239, 0.15);
+  border-color: rgba(0, 174, 239, 0.5);
 }
 
 .btn-glow {
-  box-shadow: 0 0 20px oklch(0.55 0.20 240 / 0.4);
+  box-shadow: 0 0 20px oklch(0.69 0.15 220 / 0.4);
   transition: box-shadow 0.2s ease;
 }
 .btn-glow:hover {
-  box-shadow: 0 0 30px oklch(0.55 0.20 240 / 0.6);
+  box-shadow: 0 0 30px oklch(0.69 0.15 220 / 0.6);
 }
 
 /* ─── Welcome page animations ────────────────────────────────── */
@@ -201,8 +202,8 @@
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px oklch(0.55 0.20 240 / 0.4); }
-  50% { box-shadow: 0 0 35px oklch(0.55 0.20 240 / 0.7); }
+  0%, 100% { box-shadow: 0 0 20px oklch(0.69 0.15 220 / 0.4); }
+  50% { box-shadow: 0 0 35px oklch(0.69 0.15 220 / 0.7); }
 }
 
 .animate-glow-pulse {

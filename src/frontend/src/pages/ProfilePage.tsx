@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigate } from "@tanstack/react-router";
 import {
   Car,
   CheckCircle,
@@ -11,12 +12,15 @@ import {
   Linkedin,
   Loader2,
   LogIn,
+  LogOut,
   Save,
   ShieldCheck,
+  Trash2,
+  Upload,
   User,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { StarRating } from "../components/StarRating";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
@@ -48,7 +52,8 @@ function saveSocialLinks(principalId: string, links: SocialLinks) {
 }
 
 export function ProfilePage() {
-  const { identity, login, isLoggingIn } = useInternetIdentity();
+  const { identity, login, isLoggingIn, clear } = useInternetIdentity();
+  const navigate = useNavigate();
   const { data: profile, isLoading: profileLoading } = useMyProfile();
   const { data: myRides } = useMyPostedRides();
   const { data: myBookings } = useMyBookings();
@@ -60,6 +65,7 @@ export function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [facebookUrl, setFacebookUrl] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const principalId = identity?.getPrincipal().toString() ?? "";
 
@@ -70,7 +76,6 @@ export function ProfilePage() {
     }
   }, [profile]);
 
-  // Load social links from localStorage when principalId is known
   useEffect(() => {
     if (principalId) {
       const links = getSocialLinks(principalId);
@@ -79,9 +84,22 @@ export function ProfilePage() {
     }
   }, [principalId]);
 
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const result = ev.target?.result;
+      if (typeof result === "string") {
+        setAvatarUrl(result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   if (!identity) {
     return (
-      <main className="container py-16 max-w-lg text-center">
+      <main className="container py-16 max-w-lg text-center px-4 sm:px-6">
         <User className="h-12 w-12 mx-auto mb-4 text-primary" />
         <h1 className="font-display text-2xl font-black mb-2">
           Sign in to view profile
@@ -140,37 +158,51 @@ export function ProfilePage() {
   const hasLinkedin = linkedinUrl.trim().length > 0;
 
   return (
-    <main className="container py-8 max-w-2xl">
+    <main className="container py-8 max-w-2xl px-4 sm:px-6">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <h1 className="font-display text-3xl font-black mb-8">My Profile</h1>
+        <h1 className="font-display text-3xl font-black mb-6">My Profile</h1>
+
+        {/* Logout button - visible on mobile */}
+        <Button
+          variant="outline"
+          className="md:hidden w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10 mb-6"
+          onClick={() => {
+            clear();
+            navigate({ to: "/welcome" });
+          }}
+          data-ocid="profile.logout_button"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign Out
+        </Button>
 
         {/* Profile card */}
-        <div className="bg-card border border-border rounded-xl p-6 mb-6">
+        <div className="bg-card border border-border rounded-xl p-4 sm:p-6 mb-6">
           {profileLoading ? (
             <div className="flex items-center gap-4">
-              <Skeleton className="h-20 w-20 rounded-full" />
-              <div className="space-y-2">
+              <Skeleton className="h-20 w-20 rounded-full shrink-0" />
+              <div className="space-y-2 flex-1 min-w-0">
                 <Skeleton className="h-6 w-40" />
                 <Skeleton className="h-4 w-28" />
               </div>
             </div>
           ) : profile ? (
-            <div className="flex flex-col sm:flex-row items-start gap-6">
-              <Avatar className="h-20 w-20 text-xl">
+            <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+              <Avatar className="h-20 w-20 text-xl shrink-0">
                 <AvatarImage src={profile.avatarUrl} />
                 <AvatarFallback className="bg-secondary text-secondary-foreground font-display font-black text-2xl">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1">
-                <h2 className="font-display text-2xl font-black mb-1">
+              <div className="flex-1 min-w-0">
+                <h2 className="font-display text-2xl font-black mb-1 break-words">
                   {profile.name}
                 </h2>
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <StarRating rating={profile.averageRating} size="md" />
                   <span className="font-medium">
                     {profile.averageRating.toFixed(1)}
@@ -179,7 +211,7 @@ export function ProfilePage() {
                     ({Number(profile.ratingCount)} ratings)
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground font-mono truncate mb-3">
+                <p className="text-xs text-muted-foreground font-mono truncate mb-3 max-w-full">
                   {identity.getPrincipal().toString()}
                 </p>
 
@@ -251,8 +283,57 @@ export function ProfilePage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               onSubmit={handleSave}
-              className="mt-4 pt-4 border-t border-border space-y-3"
+              className="mt-4 pt-4 border-t border-border space-y-4"
             >
+              {/* Profile photo upload */}
+              <div className="space-y-2">
+                <Label>Profile Photo</Label>
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-20 w-20 text-xl shrink-0">
+                    <AvatarImage src={avatarUrl} />
+                    <AvatarFallback className="bg-secondary text-secondary-foreground font-black text-2xl">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handlePhotoSelect}
+                      data-ocid="profile.upload_button"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="h-3.5 w-3.5" />
+                      Upload Photo
+                    </Button>
+                    {avatarUrl && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="gap-2 text-destructive hover:text-destructive"
+                        onClick={() => setAvatarUrl("")}
+                        data-ocid="profile.delete_button"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete Photo
+                      </Button>
+                    )}
+                    <p className="text-[11px] text-muted-foreground">
+                      JPG, PNG, WebP
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <Label htmlFor="profile-name">Display Name</Label>
                 <Input
@@ -264,21 +345,11 @@ export function ProfilePage() {
                   data-ocid="profile.name_input"
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="profile-avatar">Avatar URL</Label>
-                <Input
-                  id="profile-avatar"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                  placeholder="https://example.com/avatar.jpg"
-                  data-ocid="profile.avatar_input"
-                />
-              </div>
 
               {/* Social profile links */}
               <div className="pt-2 border-t border-border">
                 <p className="text-xs text-muted-foreground mb-3 flex items-center gap-1.5">
-                  <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                  <ShieldCheck className="h-3.5 w-3.5 text-primary shrink-0" />
                   Add social profile links to verify your identity and build
                   trust with other riders
                 </p>
@@ -341,7 +412,7 @@ export function ProfilePage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
           <StatCard
             label="Rides Posted"
             value={myRides?.length ?? 0}
@@ -359,26 +430,28 @@ export function ProfilePage() {
           />
           <StatCard
             label="Rating"
-            value={profile ? `${profile.averageRating.toFixed(1)} ★` : "—"}
+            value={
+              profile ? `${profile.averageRating.toFixed(1)} \u2605` : "\u2014"
+            }
             icon={<User className="h-4 w-4 text-primary" />}
           />
         </div>
 
         {/* Recent posted rides */}
         {myRides && myRides.length > 0 && (
-          <div className="bg-card border border-border rounded-xl p-5">
+          <div className="bg-card border border-border rounded-xl p-4 sm:p-5">
             <h3 className="font-display font-bold mb-4">Recent Posted Rides</h3>
             <div className="space-y-2">
               {myRides.slice(0, 5).map((ride) => (
                 <div
                   key={ride.id.toString()}
-                  className="flex items-center justify-between text-sm py-2 border-b border-border last:border-0"
+                  className="flex items-center justify-between text-sm py-2 border-b border-border last:border-0 gap-2"
                 >
-                  <span>
-                    {ride.origin} → {ride.destination}
+                  <span className="truncate min-w-0 flex-1">
+                    {ride.origin} \u2192 {ride.destination}
                   </span>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <span>{ride.date}</span>
+                  <div className="flex items-center gap-2 text-muted-foreground shrink-0">
+                    <span className="hidden sm:inline">{ride.date}</span>
                     <span className="text-xs">
                       {"active" in ride.status
                         ? "Active"
@@ -392,6 +465,22 @@ export function ProfilePage() {
             </div>
           </div>
         )}
+
+        {/* Desktop sign out */}
+        <div className="hidden md:flex justify-end mt-8">
+          <Button
+            variant="outline"
+            className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+            onClick={() => {
+              clear();
+              navigate({ to: "/welcome" });
+            }}
+            data-ocid="profile.logout_button"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
+        </div>
       </motion.div>
     </main>
   );
@@ -407,9 +496,11 @@ function StatCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="bg-card border border-border rounded-lg p-4 text-center">
+    <div className="bg-card border border-border rounded-lg p-3 sm:p-4 text-center">
       <div className="flex justify-center mb-2">{icon}</div>
-      <p className="font-display font-black text-2xl mb-0.5">{value}</p>
+      <p className="font-display font-black text-xl sm:text-2xl mb-0.5">
+        {value}
+      </p>
       <p className="text-xs text-muted-foreground">{label}</p>
     </div>
   );

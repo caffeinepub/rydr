@@ -1,5 +1,8 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Car, MessageCircle, PlusCircle, Search, User } from "lucide-react";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useMyProfile } from "../hooks/useQueries";
 
 type NavTab = {
   label: string;
@@ -44,6 +47,8 @@ const TABS: NavTab[] = [
 export function BottomNav() {
   const { location } = useRouterState();
   const currentPath = location.pathname;
+  const { identity } = useInternetIdentity();
+  const { data: profile } = useMyProfile();
 
   // Don't show bottom nav on welcome or admin pages
   if (currentPath === "/welcome" || currentPath.startsWith("/admin")) {
@@ -53,6 +58,27 @@ export function BottomNav() {
   const isActive = (path: string) => {
     if (path === "/") return currentPath === "/";
     return currentPath.startsWith(path);
+  };
+
+  const initials = (profile?.name || "?")
+    .split(" ")
+    .map((n: string) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const getTabIcon = (tab: NavTab) => {
+    if (tab.path === "/profile" && identity) {
+      return (
+        <Avatar className="h-5 w-5" data-ocid="bottom_nav.profile.avatar">
+          <AvatarImage src={profile?.avatarUrl || ""} />
+          <AvatarFallback className="text-[8px] bg-primary/30 text-primary font-bold leading-none">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+      );
+    }
+    return tab.icon;
   };
 
   return (
@@ -79,9 +105,7 @@ export function BottomNav() {
                 className="flex flex-col items-center justify-center gap-0.5 h-full w-full transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 aria-current={active ? "page" : undefined}
                 style={{
-                  color: active
-                    ? "oklch(0.55 0.20 240)"
-                    : "oklch(0.55 0.02 220)",
+                  color: active ? "#00AEEF" : "oklch(0.55 0.02 220)",
                 }}
               >
                 <span
@@ -89,7 +113,7 @@ export function BottomNav() {
                   style={{ transform: active ? "scale(1.1)" : "scale(1)" }}
                   aria-hidden="true"
                 >
-                  {tab.icon}
+                  {getTabIcon(tab)}
                 </span>
                 <span
                   className="text-[10px] leading-none font-medium"

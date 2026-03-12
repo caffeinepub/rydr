@@ -1721,7 +1721,7 @@ export function AdminPage() {
 
       {/* Main content */}
       <main className="flex-1 min-w-0 overflow-auto">
-        <div className="max-w-6xl mx-auto px-6 py-6">{renderTab()}</div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">{renderTab()}</div>
       </main>
     </div>
   );

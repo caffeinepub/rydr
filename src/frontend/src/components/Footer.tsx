@@ -1,18 +1,26 @@
-import { Heart } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Link } from "@tanstack/react-router";
+import { LogIn } from "lucide-react";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useMyProfile } from "../hooks/useQueries";
 import { AdBanner } from "./AdBanner";
-import { TrustSeal } from "./TrustSeal";
 
 export function Footer() {
-  const year = new Date().getFullYear();
-  const hostname = encodeURIComponent(
-    typeof window !== "undefined" ? window.location.hostname : "",
-  );
+  const { identity } = useInternetIdentity();
+  const { data: profile } = useMyProfile();
+
+  const initials = (profile?.name || "?")
+    .split(" ")
+    .map((n: string) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
-    <footer className="border-t border-border mt-16 py-8">
-      <div className="container flex flex-col items-center gap-4 text-sm text-muted-foreground">
+    <footer className="border-t border-border mt-16 py-6">
+      <div className="container flex flex-col items-center gap-3 text-sm text-muted-foreground px-4 sm:px-6">
         {/* Footer ad banner */}
-        <div className="w-full flex justify-center mb-4">
+        <div className="w-full flex justify-center">
           <AdBanner
             placement="footer-banner"
             size="leaderboard"
@@ -25,33 +33,38 @@ export function Footer() {
           />
         </div>
 
-        {/* Logo + brand row */}
-        <div className="flex items-center gap-2">
-          <img
-            src="/assets/uploads/file_00000000650c720883073dd037e87b31-1.png"
-            alt="RYDR"
-            className="h-6 w-auto opacity-80"
-          />
-          <span>— Your ride, your rules.</span>
-        </div>
-
-        {/* Trust seal */}
-        <TrustSeal compact />
-
-        {/* Copyright */}
-        <p className="flex items-center gap-1.5 flex-wrap justify-center text-center">
-          Made with{" "}
-          <Heart className="h-3.5 w-3.5 fill-red-500 text-red-500 shrink-0" />{" "}
-          in India · © {year} RYDR · Built using{" "}
-          <a
-            href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${hostname}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline"
-          >
-            caffeine.ai
-          </a>
-        </p>
+        {/* Profile avatar row */}
+        {identity ? (
+          <div className="flex items-center gap-2.5">
+            <Avatar className="h-7 w-7 text-xs">
+              <AvatarImage src={profile?.avatarUrl || ""} />
+              <AvatarFallback className="bg-primary/20 text-primary font-bold text-[10px]">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="text-xs">
+              <span className="font-medium text-foreground">
+                {profile?.name || "User"}
+              </span>
+              <span className="text-muted-foreground ml-1">
+                &middot; Signed in
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-xs">
+            <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center">
+              <LogIn className="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
+            <Link
+              to="/welcome"
+              className="text-primary hover:underline"
+              data-ocid="footer.login_link"
+            >
+              Sign in to your account
+            </Link>
+          </div>
+        )}
       </div>
     </footer>
   );
