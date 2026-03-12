@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Car,
+  ChevronDown,
   Clock,
   LogIn,
   MapPin,
@@ -13,6 +14,7 @@ import {
   Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { useMemo } from "react";
 import { useEffect, useState } from "react";
 import { AdBanner } from "../components/AdBanner";
 import { LocationAutocomplete } from "../components/LocationAutocomplete";
@@ -20,6 +22,7 @@ import type { LocationResult } from "../components/LocationAutocomplete";
 import { RideCard } from "../components/RideCard";
 import { useInternetIdentity } from "../hooks/useGoogleAuth";
 import { useSearchRides } from "../hooks/useQueries";
+import { scoreRides } from "../utils/rideMatching";
 
 const RYDR_SEARCHES_KEY = "rydr_recent_searches";
 
@@ -131,6 +134,11 @@ export function HomePage() {
     date: "",
   });
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [filterQuiet, setFilterQuiet] = useState(false);
+  const [filterPets, setFilterPets] = useState(false);
+  const [filterSmoking, setFilterSmoking] = useState(false);
+  const [filterLuggage, setFilterLuggage] = useState(false);
 
   useEffect(() => {
     setRecentSearches(loadRecentSearches().slice(0, 2));
@@ -171,9 +179,27 @@ export function HomePage() {
     setDestCoords({ lat: result.lat, lng: result.lng });
   };
 
-  // Suppress unused variable warnings — coords are stored for future map use
-  void originCoords;
-  void destCoords;
+  // Score, filter, and sort rides by match quality
+  const scoredRides = useMemo(() => {
+    if (!searchResults) return [];
+    let rides = searchResults;
+    if (filterQuiet)
+      rides = rides.filter((r: any) => r.chatPreference === "quiet");
+    if (filterPets) rides = rides.filter((r: any) => r.petsAllowed === true);
+    if (filterSmoking)
+      rides = rides.filter((r: any) => r.smokingAllowed === true);
+    if (filterLuggage)
+      rides = rides.filter((r: any) => r.luggageAllowed === true);
+    return scoreRides(rides, originCoords, destCoords, new Map());
+  }, [
+    searchResults,
+    originCoords,
+    destCoords,
+    filterQuiet,
+    filterPets,
+    filterSmoking,
+    filterLuggage,
+  ]);
 
   return (
     <main>
@@ -287,6 +313,77 @@ export function HomePage() {
                 Search Rides
               </Button>
             </div>
+
+            {/* Advanced Filters */}
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={() => setAdvancedOpen((o) => !o)}
+                data-ocid="search.advanced_toggle"
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mx-auto"
+              >
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform duration-200 ${advancedOpen ? "rotate-180" : ""}`}
+                />
+                Advanced Filters
+              </button>
+              <div
+                className="overflow-hidden transition-all duration-300"
+                style={{
+                  maxHeight: advancedOpen ? "200px" : "0px",
+                  opacity: advancedOpen ? 1 : 0,
+                }}
+              >
+                <div className="pt-3 pb-1 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={filterQuiet}
+                      onChange={(e) => setFilterQuiet(e.target.checked)}
+                      data-ocid="search.quiet_checkbox"
+                      className="rounded border-border accent-primary"
+                    />
+                    <span className="text-muted-foreground">
+                      Quiet ride only
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={filterPets}
+                      onChange={(e) => setFilterPets(e.target.checked)}
+                      data-ocid="search.pets_checkbox"
+                      className="rounded border-border accent-primary"
+                    />
+                    <span className="text-muted-foreground">Pets allowed</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={filterSmoking}
+                      onChange={(e) => setFilterSmoking(e.target.checked)}
+                      data-ocid="search.smoking_checkbox"
+                      className="rounded border-border accent-primary"
+                    />
+                    <span className="text-muted-foreground">
+                      Smoking allowed
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={filterLuggage}
+                      onChange={(e) => setFilterLuggage(e.target.checked)}
+                      data-ocid="search.luggage_checkbox"
+                      className="rounded border-border accent-primary"
+                    />
+                    <span className="text-muted-foreground">
+                      Luggage allowed
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
           </motion.form>
 
           {/* Login CTA — shown only when not signed in */}
@@ -386,7 +483,7 @@ export function HomePage() {
                 ? "Searching\u2026"
                 : searchResults && searchResults.length > 0
                   ? `${searchResults.length} ride${searchResults.length !== 1 ? "s" : ""} found`
-                  : "No rides found"}
+                  : "No exact ride found. Showing nearby matches."}
             </h2>
 
             {isLoading && (
@@ -414,27 +511,44 @@ export function HomePage() {
                 data-ocid="search.empty_state"
               >
                 <Car className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                <p className="text-lg font-medium mb-1">No rides found</p>
-                <p className="text-sm">
+                <p className="text-lg font-medium mb-1">
+                  No exact ride found. Showing nearby matches.
+                </p>
+                <p className="text-sm mb-4">
                   Try different dates or locations, or{" "}
                   <a href="/post-ride" className="text-primary hover:underline">
                     post your own ride
                   </a>
                   .
                 </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-primary/40 text-primary hover:bg-primary/10"
+                  data-ocid="search.notify.button"
+                  onClick={() => {
+                    import("sonner").then(({ toast }) => {
+                      toast.success(
+                        "We'll alert you when a ride is available on this route.",
+                      );
+                    });
+                  }}
+                >
+                  🔔 Notify me when a ride is available
+                </Button>
               </div>
             )}
 
             {!isLoading && searchResults && searchResults.length > 0 && (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {searchResults.map((ride, i) => (
+                {scoredRides.map(({ ride, score }, i) => (
                   <motion.div
                     key={ride.id.toString()}
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.07 }}
                   >
-                    <RideCard ride={ride} index={i + 1} />
+                    <RideCard ride={ride} index={i + 1} matchScore={score} />
                   </motion.div>
                 ))}
               </div>

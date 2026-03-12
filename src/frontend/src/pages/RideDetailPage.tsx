@@ -1,3 +1,13 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,11 +25,13 @@ import {
   Clock,
   Loader2,
   MapPin,
+  MessageCircle,
   PawPrint,
   Users,
   Zap,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { RideMap } from "../components/RideMap";
 import { StarRating } from "../components/StarRating";
@@ -52,7 +64,15 @@ export function RideDetailPage() {
 
   const myBookingForRide = myBookings?.find((b) => b.rideId === rideIdBigInt);
 
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [extraSeats, setExtraSeats] = useState(1);
+
   const handleBook = async () => {
+    // Check for duplicate booking first
+    if (myBookingForRide) {
+      setShowDuplicateDialog(true);
+      return;
+    }
     if (!rideIdBigInt) return;
     try {
       await bookRide(rideIdBigInt);
@@ -102,6 +122,7 @@ export function RideDetailPage() {
   const isInstant = "instant" in ride.approvalMode;
   const isActive = isRideActive(ride.status);
   const seatsAvailable = Number(ride.seatsAvailable);
+  const maxExtraSeats = Math.min(4, seatsAvailable);
 
   return (
     <main className="container py-8 max-w-3xl px-4 sm:px-6">
@@ -199,6 +220,13 @@ export function RideDetailPage() {
             Ride Preferences
           </h3>
           <div className="flex flex-wrap gap-3">
+            {/* Chat preference */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm border bg-secondary border-border text-foreground">
+              <MessageCircle className="h-4 w-4" />
+              {(ride as any).chatPreference === "quiet"
+                ? "Quiet ride 🤫"
+                : "Chatty ride 🗣️"}
+            </div>
             <PreferenceItem
               allowed={ride.petsAllowed}
               label="Pets Allowed"
@@ -294,28 +322,45 @@ export function RideDetailPage() {
               </Button>
             </div>
           ) : myBookingForRide ? (
-            <div
-              className="flex items-center gap-3"
-              data-ocid="ride.booking_status"
-            >
-              {isBookingConfirmed(myBookingForRide.status) ? (
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-              ) : isBookingPending(myBookingForRide.status) ? (
-                <Clock className="h-5 w-5 text-muted-foreground shrink-0" />
-              ) : (
-                <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
-              )}
-              <div>
-                <p className="font-medium">
-                  Booking {getBookingStatusLabel(myBookingForRide.status)}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {isBookingConfirmed(myBookingForRide.status)
-                    ? "Your seat is confirmed. Have a great trip!"
-                    : isBookingPending(myBookingForRide.status)
-                      ? "Waiting for driver approval."
-                      : "Your booking was rejected."}
-                </p>
+            <div data-ocid="ride.booking_status">
+              {/* Already booked info banner */}
+              <div className="flex items-center justify-between gap-3 mb-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-primary shrink-0" />
+                  <p className="text-sm font-medium text-primary">
+                    You have already booked this ride.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs shrink-0 border-primary/40 text-primary hover:bg-primary/10"
+                  onClick={() => setShowDuplicateDialog(true)}
+                  data-ocid="ride.modify_booking.button"
+                >
+                  Modify Booking
+                </Button>
+              </div>
+              <div className="flex items-center gap-3">
+                {isBookingConfirmed(myBookingForRide.status) ? (
+                  <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                ) : isBookingPending(myBookingForRide.status) ? (
+                  <Clock className="h-5 w-5 text-muted-foreground shrink-0" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
+                )}
+                <div>
+                  <p className="font-medium">
+                    Booking {getBookingStatusLabel(myBookingForRide.status)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {isBookingConfirmed(myBookingForRide.status)
+                      ? "Your seat is confirmed. Have a great trip!"
+                      : isBookingPending(myBookingForRide.status)
+                        ? "Waiting for driver approval."
+                        : "Your booking was rejected."}
+                  </p>
+                </div>
               </div>
             </div>
           ) : isActive && seatsAvailable > 0 ? (
@@ -350,6 +395,70 @@ export function RideDetailPage() {
           )}
         </div>
       </motion.div>
+
+      {/* Duplicate booking dialog */}
+      <AlertDialog
+        open={showDuplicateDialog}
+        onOpenChange={setShowDuplicateDialog}
+      >
+        <AlertDialogContent data-ocid="ride.duplicate.dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Already Booked</AlertDialogTitle>
+            <AlertDialogDescription>
+              You already have a seat booked for this ride. Would you like to
+              book additional seats for family or friends?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-3">
+            <p className="text-sm text-muted-foreground mb-3">
+              Additional seats (max {maxExtraSeats}):
+            </p>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setExtraSeats((s) => Math.max(1, s - 1))}
+                disabled={extraSeats <= 1}
+                data-ocid="ride.extra_seats.decrease.button"
+              >
+                -
+              </Button>
+              <span className="text-lg font-bold w-8 text-center">
+                {extraSeats}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() =>
+                  setExtraSeats((s) => Math.min(maxExtraSeats, s + 1))
+                }
+                disabled={extraSeats >= maxExtraSeats}
+                data-ocid="ride.extra_seats.increase.button"
+              >
+                +
+              </Button>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-ocid="ride.duplicate.cancel.button">
+              Keep Current Booking
+            </AlertDialogCancel>
+            <AlertDialogAction
+              data-ocid="ride.duplicate.confirm.button"
+              onClick={() => {
+                toast.success(
+                  `Additional seats request submitted — up to ${extraSeats} seat${extraSeats !== 1 ? "s" : ""}.`,
+                );
+                setShowDuplicateDialog(false);
+              }}
+            >
+              Add Seats
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }

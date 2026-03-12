@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -19,6 +20,7 @@ import {
   MapPin,
   MessageCircle,
   PawPrint,
+  Phone,
   Save,
   ShieldCheck,
   Trash2,
@@ -87,11 +89,11 @@ export function ProfilePage() {
   const [city, setCity] = useState("");
   const [about, setAbout] = useState("");
 
-  // Ride preferences
-  const [chatPref, setChatPref] = useState("");
-  const [petsPreference, setPetsPreference] = useState("");
-  const [smokingPreference, setSmokingPreference] = useState("");
-  const [luggagePreference, setLuggagePreference] = useState("");
+  // Role & contact
+  const [userRole, setUserRole] = useState<"driver" | "rider" | "">("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [gender, setGender] = useState("");
+  const [isPhoneHidden, setIsPhoneHidden] = useState(false);
 
   // Driver info
   const [carBrand, setCarBrand] = useState("");
@@ -107,22 +109,22 @@ export function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const principalId = identity?.getPrincipal().toString() ?? "";
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: googleUser used only for initial default, not a reactive dep
+  // biome-ignore lint/correctness/useExhaustiveDependencies: googleUser used only for initial default
   useEffect(() => {
     if (profile) {
       setName(profile.name || googleUser?.name || "");
       setAvatarUrl(profile.avatarUrl || googleUser?.picture || "");
       setCity(profile.city || "");
       setAbout(profile.about || "");
-      setChatPref(profile.chatPref || "");
-      setPetsPreference(profile.petsPreference || "");
-      setSmokingPreference(profile.smokingPreference || "");
-      setLuggagePreference(profile.luggagePreference || "");
       setCarBrand(profile.carBrand || "");
       setCarColor(profile.carColor || "");
       setVehicleType(profile.vehicleType || "");
       setLicensePlate(profile.licensePlate || "");
-      // Use backend social links, fall back to localStorage
+      setUserRole((profile.userRole as "driver" | "rider" | "") || "");
+      setPhoneNumber(profile.phoneNumber || "");
+      setGender(profile.gender || "");
+      setIsPhoneHidden(profile.isPhoneHidden || false);
+
       const fbFromBackend = profile.facebookUrl || "";
       const liFromBackend = profile.linkedinUrl || "";
       if (fbFromBackend || liFromBackend) {
@@ -164,9 +166,10 @@ export function ProfilePage() {
       toast.error("Name is required.");
       return;
     }
-    if (!facebookUrl.trim() && !linkedinUrl.trim()) {
+    // Social link is mandatory for drivers
+    if (userRole === "driver" && !facebookUrl.trim() && !linkedinUrl.trim()) {
       setSocialError(
-        "At least one social profile link (Facebook or LinkedIn) is required.",
+        "Drivers must add a LinkedIn or Facebook profile to build rider trust.",
       );
       return;
     }
@@ -176,17 +179,29 @@ export function ProfilePage() {
         avatarUrl,
         city: city.trim(),
         about: about.trim(),
-        chatPref,
-        petsPreference,
-        smokingPreference,
-        luggagePreference,
-        carBrand: carBrand.trim(),
-        carColor: carColor.trim(),
-        vehicleType,
-        licensePlate: licensePlate.trim(),
+        chatPref: "",
+        petsPreference: "",
+        smokingPreference: "",
+        luggagePreference: "",
+        carBrand: userRole === "driver" ? carBrand.trim() : "",
+        carColor: userRole === "driver" ? carColor.trim() : "",
+        vehicleType: userRole === "driver" ? vehicleType : "",
+        licensePlate: userRole === "driver" ? licensePlate.trim() : "",
         facebookUrl: facebookUrl.trim(),
         linkedinUrl: linkedinUrl.trim(),
       });
+      // Persist role, phone, gender locally since backend may not have these fields yet
+      if (principalId) {
+        try {
+          const extra = { userRole, phoneNumber, gender, isPhoneHidden };
+          localStorage.setItem(
+            `rydr_profile_ext_${principalId}`,
+            JSON.stringify(extra),
+          );
+        } catch {
+          /* ignore */
+        }
+      }
       toast.success("Profile updated successfully!");
       setIsEditing(false);
     } catch (err: unknown) {
@@ -311,6 +326,17 @@ export function ProfilePage() {
                     {profile.city}
                   </p>
                 )}
+                {userRole && (
+                  <span
+                    className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium mb-1 ${
+                      userRole === "driver"
+                        ? "bg-primary/10 text-primary border border-primary/30"
+                        : "bg-muted text-muted-foreground border border-border"
+                    }`}
+                  >
+                    {userRole === "driver" ? "🚗 Driver" : "🧑‍💼 Rider"}
+                  </span>
+                )}
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <StarRating rating={profile.averageRating} size="md" />
                   <span className="font-medium">
@@ -390,8 +416,47 @@ export function ProfilePage() {
               onSubmit={handleSave}
               className="mt-4 pt-4 border-t border-border space-y-6"
             >
+              {/* Role Selector */}
+              <div className="space-y-3">
+                <h3 className="font-display font-bold text-sm uppercase tracking-wider text-muted-foreground">
+                  How will you use RYDR?
+                </h3>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setUserRole("driver")}
+                    data-ocid="profile.role_driver.toggle"
+                    className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold border-2 transition-all ${
+                      userRole === "driver"
+                        ? "bg-[#00AEEF] text-white border-[#00AEEF] shadow-md"
+                        : "bg-background border-border text-foreground hover:border-[#00AEEF]/50"
+                    }`}
+                  >
+                    🚗 Post Rides
+                    <span className="block text-xs font-normal mt-0.5 opacity-80">
+                      Driver
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUserRole("rider")}
+                    data-ocid="profile.role_rider.toggle"
+                    className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold border-2 transition-all ${
+                      userRole === "rider"
+                        ? "bg-[#00AEEF] text-white border-[#00AEEF] shadow-md"
+                        : "bg-background border-border text-foreground hover:border-[#00AEEF]/50"
+                    }`}
+                  >
+                    🧑‍💼 Book Rides
+                    <span className="block text-xs font-normal mt-0.5 opacity-80">
+                      Rider
+                    </span>
+                  </button>
+                </div>
+              </div>
+
               {/* Section 1: Basic Info */}
-              <div className="space-y-4">
+              <div className="space-y-4 pt-2 border-t border-border">
                 <h3 className="font-display font-bold text-sm uppercase tracking-wider text-muted-foreground">
                   Basic Information
                 </h3>
@@ -469,6 +534,56 @@ export function ProfilePage() {
                 </div>
 
                 <div className="space-y-1.5">
+                  <Label
+                    htmlFor="profile-phone"
+                    className="flex items-center gap-1.5"
+                  >
+                    <Phone className="h-3.5 w-3.5" /> Mobile Number
+                  </Label>
+                  <Input
+                    id="profile-phone"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="+91 9876543210"
+                    type="tel"
+                    data-ocid="profile.phone.input"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="profile-gender">Gender</Label>
+                  <select
+                    id="profile-gender"
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    data-ocid="profile.gender.select"
+                  >
+                    <option value="">Prefer not to say</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="prefer_not">Prefer not to say</option>
+                  </select>
+                </div>
+
+                {/* Phone privacy toggle for female users */}
+                {gender === "female" && (
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border">
+                    <div className="flex-1 min-w-0 mr-3">
+                      <p className="text-sm font-medium">Keep number private</p>
+                      <p className="text-xs text-muted-foreground">
+                        Reveal phone number only after ride acceptance
+                      </p>
+                    </div>
+                    <Switch
+                      checked={isPhoneHidden}
+                      onCheckedChange={setIsPhoneHidden}
+                      data-ocid="profile.phone_hidden.switch"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
                   <Label htmlFor="profile-about">About Me</Label>
                   <Textarea
                     id="profile-about"
@@ -485,133 +600,98 @@ export function ProfilePage() {
                 </div>
               </div>
 
-              {/* Section 2: Ride Preferences */}
-              <div className="space-y-4 pt-2 border-t border-border">
-                <h3 className="font-display font-bold text-sm uppercase tracking-wider text-muted-foreground">
-                  Ride Preferences
-                </h3>
-
-                <PrefToggle
-                  label="Chat Preference"
-                  icon={<MessageCircle className="h-4 w-4" />}
-                  value={chatPref}
-                  onChange={setChatPref}
-                  options={[
-                    { value: "chatty", label: "Chatty during ride" },
-                    { value: "quiet", label: "Quiet ride preferred" },
-                  ]}
-                />
-
-                <PrefToggle
-                  label="Pets"
-                  icon={<PawPrint className="h-4 w-4" />}
-                  value={petsPreference}
-                  onChange={setPetsPreference}
-                  options={[
-                    { value: "allowed", label: "Pets allowed" },
-                    { value: "not_allowed", label: "Pets not allowed" },
-                  ]}
-                />
-
-                <PrefToggle
-                  label="Smoking"
-                  icon={<Cigarette className="h-4 w-4" />}
-                  value={smokingPreference}
-                  onChange={setSmokingPreference}
-                  options={[
-                    { value: "allowed", label: "Smoking allowed" },
-                    { value: "not_allowed", label: "No smoking in car" },
-                  ]}
-                />
-
-                <PrefToggle
-                  label="Luggage"
-                  icon={<Briefcase className="h-4 w-4" />}
-                  value={luggagePreference}
-                  onChange={setLuggagePreference}
-                  options={[
-                    { value: "allowed", label: "Luggage allowed" },
-                    { value: "limited", label: "Limited luggage" },
-                    { value: "none", label: "No luggage" },
-                  ]}
-                />
-              </div>
-
-              {/* Section 3: Driver Info */}
-              <div className="space-y-4 pt-2 border-t border-border">
-                <div>
-                  <h3 className="font-display font-bold text-sm uppercase tracking-wider text-muted-foreground">
-                    Driver Information
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Fill these if you post rides as a driver
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="car-brand">Car Brand / Model</Label>
-                    <Input
-                      id="car-brand"
-                      value={carBrand}
-                      onChange={(e) => setCarBrand(e.target.value)}
-                      placeholder="e.g. MG Hector"
-                      data-ocid="profile.car_brand_input"
-                    />
+              {/* Section 2: Driver Info — only for drivers */}
+              {userRole === "driver" && (
+                <div className="space-y-4 pt-2 border-t border-border">
+                  <div>
+                    <h3 className="font-display font-bold text-sm uppercase tracking-wider text-muted-foreground">
+                      Driver Information
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Required for posting rides
+                    </p>
                   </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="car-brand">Car Brand / Model</Label>
+                      <Input
+                        id="car-brand"
+                        value={carBrand}
+                        onChange={(e) => setCarBrand(e.target.value)}
+                        placeholder="e.g. MG Hector"
+                        data-ocid="profile.car_brand_input"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="car-color">Car Color</Label>
+                      <Input
+                        id="car-color"
+                        value={carColor}
+                        onChange={(e) => setCarColor(e.target.value)}
+                        placeholder="e.g. Blue"
+                        data-ocid="profile.car_color_input"
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-1.5">
-                    <Label htmlFor="car-color">Car Color</Label>
+                    <Label htmlFor="vehicle-type">Vehicle Type</Label>
+                    <select
+                      id="vehicle-type"
+                      value={vehicleType}
+                      onChange={(e) => setVehicleType(e.target.value)}
+                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      data-ocid="profile.vehicle_type_select"
+                    >
+                      <option value="">Select type</option>
+                      <option value="hatchback">Hatchback</option>
+                      <option value="sedan">Sedan</option>
+                      <option value="suv">SUV</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="license-plate">
+                      License Plate{" "}
+                      <span className="text-muted-foreground">(optional)</span>
+                    </Label>
                     <Input
-                      id="car-color"
-                      value={carColor}
-                      onChange={(e) => setCarColor(e.target.value)}
-                      placeholder="e.g. Blue"
-                      data-ocid="profile.car_color_input"
+                      id="license-plate"
+                      value={licensePlate}
+                      onChange={(e) => setLicensePlate(e.target.value)}
+                      placeholder="e.g. MH 04 AB 1234"
+                      data-ocid="profile.license_plate_input"
                     />
                   </div>
                 </div>
+              )}
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="vehicle-type">Vehicle Type</Label>
-                  <select
-                    id="vehicle-type"
-                    value={vehicleType}
-                    onChange={(e) => setVehicleType(e.target.value)}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    data-ocid="profile.vehicle_type_select"
-                  >
-                    <option value="">Select type</option>
-                    <option value="hatchback">Hatchback</option>
-                    <option value="sedan">Sedan</option>
-                    <option value="suv">SUV</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="license-plate">
-                    License Plate{" "}
-                    <span className="text-muted-foreground">(optional)</span>
-                  </Label>
-                  <Input
-                    id="license-plate"
-                    value={licensePlate}
-                    onChange={(e) => setLicensePlate(e.target.value)}
-                    placeholder="e.g. MH 04 AB 1234"
-                    data-ocid="profile.license_plate_input"
-                  />
-                </div>
-              </div>
-
-              {/* Section 4: Social Profile (Mandatory) */}
+              {/* Section 4: Social Profile */}
               <div className="space-y-4 pt-2 border-t border-border">
                 <div>
                   <h3 className="font-display font-bold text-sm uppercase tracking-wider text-muted-foreground">
-                    Social Profile *
+                    Social Profile{userRole === "driver" ? " *" : ""}
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    At least one social profile required for trust verification
+                    {userRole === "driver"
+                      ? "Mandatory for drivers — helps riders verify your identity"
+                      : "Optional — helps build trust with other users"}
                   </p>
                 </div>
+
+                {userRole === "driver" && (
+                  <div className="p-3 rounded-lg border border-primary/30 bg-primary/5">
+                    <div className="flex items-start gap-2">
+                      <ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                      <p className="text-xs text-primary">
+                        As a driver, adding a social profile helps passengers
+                        verify your identity and increases booking rates. Add
+                        your LinkedIn or Facebook profile below.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-1.5">
                   <Label
@@ -688,64 +768,6 @@ export function ProfilePage() {
             <p className="text-sm leading-relaxed">{profile.about}</p>
           </div>
         )}
-
-        {/* ── View mode: Preferences ── */}
-        {!isEditing &&
-          profile &&
-          (profile.chatPref ||
-            profile.petsPreference ||
-            profile.smokingPreference ||
-            profile.luggagePreference) && (
-            <div className="bg-card border border-border rounded-xl p-4 sm:p-5 mb-4">
-              <h3 className="font-display font-bold text-sm uppercase tracking-wider text-muted-foreground mb-3">
-                Ride Preferences
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {profile.chatPref && (
-                  <PrefChip
-                    icon={<MessageCircle className="h-3.5 w-3.5" />}
-                    label={
-                      profile.chatPref === "chatty"
-                        ? "Chatty during ride"
-                        : "Quiet ride preferred"
-                    }
-                  />
-                )}
-                {profile.petsPreference && (
-                  <PrefChip
-                    icon={<PawPrint className="h-3.5 w-3.5" />}
-                    label={
-                      profile.petsPreference === "allowed"
-                        ? "Pets allowed"
-                        : "Pets not allowed"
-                    }
-                  />
-                )}
-                {profile.smokingPreference && (
-                  <PrefChip
-                    icon={<Cigarette className="h-3.5 w-3.5" />}
-                    label={
-                      profile.smokingPreference === "allowed"
-                        ? "Smoking allowed"
-                        : "No smoking in car"
-                    }
-                  />
-                )}
-                {profile.luggagePreference && (
-                  <PrefChip
-                    icon={<Briefcase className="h-3.5 w-3.5" />}
-                    label={
-                      profile.luggagePreference === "allowed"
-                        ? "Luggage allowed"
-                        : profile.luggagePreference === "limited"
-                          ? "Limited luggage"
-                          : "No luggage"
-                    }
-                  />
-                )}
-              </div>
-            </div>
-          )}
 
         {/* ── View mode: Driver Info ── */}
         {!isEditing && profile && (profile.carBrand || profile.vehicleType) && (
@@ -851,54 +873,6 @@ export function ProfilePage() {
   );
 }
 
-function PrefToggle({
-  label,
-  icon,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  value: string;
-  onChange: (v: string) => void;
-  options: { value: string; label: string }[];
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label className="flex items-center gap-2">
-        {icon}
-        {label}
-      </Label>
-      <div className="flex flex-wrap gap-2">
-        {options.map((opt) => (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => onChange(value === opt.value ? "" : opt.value)}
-            className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
-              value === opt.value
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background border-border text-foreground hover:border-primary/50"
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function PrefChip({ icon, label }: { icon: React.ReactNode; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-primary/30 bg-primary/5 text-primary">
-      {icon}
-      {label}
-    </span>
-  );
-}
-
 function StatCard({
   label,
   value,
@@ -909,12 +883,12 @@ function StatCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="bg-card border border-border rounded-lg p-3 sm:p-4 text-center">
-      <div className="flex justify-center mb-2">{icon}</div>
-      <p className="font-display font-black text-xl sm:text-2xl mb-0.5">
-        {value}
-      </p>
-      <p className="text-xs text-muted-foreground">{label}</p>
+    <div className="bg-card border border-border rounded-xl p-3 sm:p-4 flex flex-col gap-1">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">{label}</span>
+        {icon}
+      </div>
+      <p className="text-xl font-display font-black">{value}</p>
     </div>
   );
 }

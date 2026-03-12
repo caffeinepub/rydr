@@ -18,6 +18,7 @@ import {
 
 const ADMIN_EMAIL = "aman5875@gmail.com";
 const STORAGE_KEY = "rydr_google_session";
+const REDIRECT_KEY = "rydr_redirect_after_login";
 
 export type GoogleUser = {
   email: string;
@@ -126,6 +127,16 @@ export function useGoogleAuthProvider(): GoogleAuthContext {
         setGoogleUser(user);
         setIdentity(id);
         setShowLoginModal(false);
+
+        // Redirect to the page the user was trying to access before login
+        const redirectPath = sessionStorage.getItem(REDIRECT_KEY);
+        if (redirectPath) {
+          sessionStorage.removeItem(REDIRECT_KEY);
+          // Use a microtask so state updates settle before navigation
+          setTimeout(() => {
+            window.location.href = redirectPath;
+          }, 50);
+        }
       } finally {
         setIsLoggingIn(false);
       }

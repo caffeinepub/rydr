@@ -55,6 +55,15 @@ export type UserPublic = {
   linkedinUrl: string;
   averageRating: number;
   ratingCount: bigint;
+  // Extended fields (fallback to defaults if not in backend response)
+  userRole: string; // "driver" | "rider" | ""
+  phoneNumber: string;
+  gender: string; // "male" | "female" | "prefer_not"
+  isPhoneHidden: boolean;
+  completedRidesCount: number;
+  reliabilityScore: number; // 0–5, driver only
+  driverCancellationCount: number;
+  passengerCancellationCount: number;
 };
 
 // Utility functions

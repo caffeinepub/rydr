@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Banknote,
   Briefcase,
@@ -25,7 +25,7 @@ import { LocationAutocomplete } from "../components/LocationAutocomplete";
 import type { LocationResult } from "../components/LocationAutocomplete";
 import { useActor } from "../hooks/useActor";
 import { useInternetIdentity } from "../hooks/useGoogleAuth";
-import { usePostRide } from "../hooks/useQueries";
+import { useMyProfile, usePostRide } from "../hooks/useQueries";
 import type { ApprovalMode } from "../types";
 
 const TOTAL_STEPS = 6;
@@ -51,6 +51,7 @@ const STEP_SUBTITLES = [
 export function PostRidePage() {
   const { identity, login, isLoggingIn } = useInternetIdentity();
   const { actor, isFetching: actorFetching } = useActor();
+  const { data: myProfile } = useMyProfile();
   const navigate = useNavigate();
   const { mutateAsync, isPending } = usePostRide();
 
@@ -75,6 +76,9 @@ export function PostRidePage() {
   const [petsAllowed, setPetsAllowed] = useState(false);
   const [smokingAllowed, setSmokingAllowed] = useState(false);
   const [luggageAllowed, setLuggageAllowed] = useState(true);
+  const [chatPreference, setChatPreference] = useState<"chatty" | "quiet">(
+    "chatty",
+  );
   const [approvalMode, setApprovalMode] = useState<"instant" | "manual">(
     "instant",
   );
@@ -175,6 +179,34 @@ export function PostRidePage() {
             <LogIn className="h-4 w-4" />
           )}
           {isLoggingIn ? "Connecting..." : "Sign In"}
+        </Button>
+      </main>
+    );
+  }
+
+  // Driver role check: only allow users with driver profile to post rides
+  if (
+    identity &&
+    myProfile &&
+    myProfile.userRole &&
+    myProfile.userRole !== "driver"
+  ) {
+    return (
+      <main className="container py-16 max-w-lg text-center px-4 sm:px-6">
+        <Car className="h-12 w-12 mx-auto mb-4 text-primary" />
+        <h1 className="font-display text-2xl font-black mb-2">
+          Driver profile required
+        </h1>
+        <p className="text-muted-foreground mb-6">
+          You need to set up a driver profile before posting rides. Add your
+          vehicle info and a social profile link to get started.
+        </p>
+        <Button
+          asChild
+          className="gap-2 bg-[#00AEEF] hover:bg-[#1F7AE0] text-white"
+          data-ocid="post_ride.driver_required.button"
+        >
+          <Link to="/profile">Complete Driver Profile →</Link>
         </Button>
       </main>
     );
@@ -304,6 +336,8 @@ export function PostRidePage() {
                 setSmokingAllowed={setSmokingAllowed}
                 luggageAllowed={luggageAllowed}
                 setLuggageAllowed={setLuggageAllowed}
+                chatPreference={chatPreference}
+                setChatPreference={setChatPreference}
                 approvalMode={approvalMode}
                 setApprovalMode={setApprovalMode}
                 onNext={goNext}
@@ -322,6 +356,7 @@ export function PostRidePage() {
                 petsAllowed={petsAllowed}
                 smokingAllowed={smokingAllowed}
                 luggageAllowed={luggageAllowed}
+                chatPreference={chatPreference}
                 approvalMode={approvalMode}
                 onPublish={handlePublish}
                 isPending={isPending}
@@ -582,6 +617,8 @@ function StepPreferences({
   setSmokingAllowed,
   luggageAllowed,
   setLuggageAllowed,
+  chatPreference,
+  setChatPreference,
   approvalMode,
   setApprovalMode,
   onNext,
@@ -592,12 +629,47 @@ function StepPreferences({
   setSmokingAllowed: (v: boolean) => void;
   luggageAllowed: boolean;
   setLuggageAllowed: (v: boolean) => void;
+  chatPreference: "chatty" | "quiet";
+  setChatPreference: (v: "chatty" | "quiet") => void;
   approvalMode: "instant" | "manual";
   setApprovalMode: (v: "instant" | "manual") => void;
   onNext: () => void;
 }) {
   return (
     <div className="space-y-5">
+      {/* Chat preference */}
+      <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-2">
+          Chat preference
+        </p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setChatPreference("chatty")}
+            data-ocid="post_ride.chatty_pill"
+            className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
+              chatPreference === "chatty"
+                ? "bg-primary/15 border-primary/40 text-primary"
+                : "border-border text-muted-foreground hover:border-primary/30"
+            }`}
+          >
+            Chatty 🗣️
+          </button>
+          <button
+            type="button"
+            onClick={() => setChatPreference("quiet")}
+            data-ocid="post_ride.quiet_pill"
+            className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
+              chatPreference === "quiet"
+                ? "bg-primary/15 border-primary/40 text-primary"
+                : "border-border text-muted-foreground hover:border-primary/30"
+            }`}
+          >
+            Quiet 🤫
+          </button>
+        </div>
+      </div>
+
       {/* Preference toggles */}
       <div className="bg-card border border-border rounded-xl p-4 space-y-3">
         <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-2">
@@ -697,6 +769,7 @@ function StepReview({
   petsAllowed,
   smokingAllowed,
   luggageAllowed,
+  chatPreference,
   approvalMode,
   onPublish,
   isPending,
@@ -711,6 +784,7 @@ function StepReview({
   petsAllowed: boolean;
   smokingAllowed: boolean;
   luggageAllowed: boolean;
+  chatPreference: "chatty" | "quiet";
   approvalMode: "instant" | "manual";
   onPublish: () => void;
   isPending: boolean;
@@ -723,6 +797,10 @@ function StepReview({
     { label: "Time", value: departureTime },
     { label: "Seats", value: String(seats) },
     { label: "Price / seat", value: `₹${price}` },
+    {
+      label: "Chat",
+      value: chatPreference === "chatty" ? "Chatty 🗣️" : "Quiet 🤫",
+    },
     { label: "Pets", value: petsAllowed ? "Allowed" : "Not allowed" },
     { label: "Smoking", value: smokingAllowed ? "Allowed" : "Not allowed" },
     { label: "Luggage", value: luggageAllowed ? "Allowed" : "Not allowed" },

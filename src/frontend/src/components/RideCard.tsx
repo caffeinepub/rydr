@@ -22,16 +22,56 @@ interface RideCardProps {
   ride: Ride;
   driver?: UserPublic | null;
   index?: number;
+  matchScore?: number;
 }
 
-export function RideCard({ ride, driver, index = 1 }: RideCardProps) {
+function MatchBadge({ score }: { score: number }) {
+  if (score >= 80) {
+    return (
+      <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/30">
+        Great Match
+      </span>
+    );
+  }
+  if (score >= 60) {
+    return (
+      <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
+        Good Match
+      </span>
+    );
+  }
+  if (score >= 40) {
+    return (
+      <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
+        Nearby Match
+      </span>
+    );
+  }
+  return null;
+}
+
+export function RideCard({
+  ride,
+  driver,
+  index = 1,
+  matchScore,
+}: RideCardProps) {
   const isInstant = "instant" in ride.approvalMode;
+  const hasSocialVerified =
+    driver && (driver.linkedinUrl?.trim() || driver.facebookUrl?.trim());
+  const showRidesCount = driver && (driver.completedRidesCount ?? 0) > 0;
+  const showReliability = driver && (driver.reliabilityScore ?? 0) > 0;
 
   return (
     <div
       data-ocid={`search.ride.item.${index}`}
-      className="bg-card border border-[#00AEEF]/30 rounded-lg p-4 card-hover group shadow-[0_0_8px_rgba(0,174,239,0.1)]"
+      className="relative bg-card border border-[#00AEEF]/30 rounded-lg p-4 card-hover group shadow-[0_0_8px_rgba(0,174,239,0.1)]"
     >
+      {/* Match badge */}
+      {matchScore !== undefined && matchScore > 0 && (
+        <MatchBadge score={matchScore} />
+      )}
+
       {/* Route */}
       <div className="flex items-center gap-3 mb-4">
         <div className="flex flex-col items-center gap-1">
@@ -120,11 +160,26 @@ export function RideCard({ ride, driver, index = 1 }: RideCardProps) {
             </Avatar>
             <div>
               <p className="text-sm font-medium">{driver.name}</p>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 flex-wrap">
                 <StarRating rating={driver.averageRating} size="sm" />
                 <span className="text-xs text-muted-foreground">
                   ({Number(driver.ratingCount)})
                 </span>
+                {showRidesCount && (
+                  <span className="text-xs text-muted-foreground">
+                    🚗 {driver.completedRidesCount} rides
+                  </span>
+                )}
+                {showReliability && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                    Reliability {driver.reliabilityScore.toFixed(1)}
+                  </span>
+                )}
+                {hasSocialVerified && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-400 font-medium">
+                    ✓ Social verified
+                  </span>
+                )}
               </div>
             </div>
           </div>

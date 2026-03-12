@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link, useParams } from "@tanstack/react-router";
 import {
+  AlertTriangle,
   ArrowLeft,
   Briefcase,
   Car,
@@ -12,6 +13,7 @@ import {
   MessageCircle,
   PawPrint,
   ShieldCheck,
+  Star,
   User,
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -80,6 +82,7 @@ export function UserProfileViewPage() {
   const hasDriverInfo = !!(user.carBrand || user.vehicleType);
   const hasFacebook = !!user.facebookUrl?.trim();
   const hasLinkedin = !!user.linkedinUrl?.trim();
+  const hasSocial = hasFacebook || hasLinkedin;
 
   const vehicleLabel = [
     user.carBrand,
@@ -120,6 +123,12 @@ export function UserProfileViewPage() {
 
   const hasPreferences = chatLabel || petsLabel || smokingLabel || luggageLabel;
 
+  const reliabilityScore = user.reliabilityScore ?? 0;
+  const completedRidesCount = user.completedRidesCount ?? 0;
+  const driverCancellations = user.driverCancellationCount ?? 0;
+  const passengerCancellations = user.passengerCancellationCount ?? 0;
+  const isDriver = hasDriverInfo || reliabilityScore > 0;
+
   return (
     <main className="container py-8 max-w-2xl px-4 sm:px-6">
       <motion.div
@@ -148,16 +157,24 @@ export function UserProfileViewPage() {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <h1 className="font-display text-2xl font-black mb-1 break-words">
-                {user.name}
-              </h1>
+              <div className="flex items-start justify-between gap-2 mb-1 flex-wrap">
+                <h1 className="font-display text-2xl font-black break-words">
+                  {user.name}
+                </h1>
+                {hasSocial && (
+                  <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 font-medium shrink-0">
+                    <ShieldCheck className="h-3 w-3" />
+                    Social verified
+                  </span>
+                )}
+              </div>
               {user.city && (
                 <p className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
                   <MapPin className="h-3.5 w-3.5" />
                   {user.city}
                 </p>
               )}
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap mb-2">
                 <StarRating rating={user.averageRating} size="md" />
                 <span className="font-medium text-sm">
                   {user.averageRating.toFixed(1)}
@@ -166,6 +183,52 @@ export function UserProfileViewPage() {
                   ({Number(user.ratingCount)} ratings)
                 </span>
               </div>
+
+              {/* Driver reliability score */}
+              {isDriver && reliabilityScore > 0 && (
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        className="h-3.5 w-3.5"
+                        fill={
+                          s <= Math.round(reliabilityScore) ? "#f59e0b" : "none"
+                        }
+                        stroke={
+                          s <= Math.round(reliabilityScore)
+                            ? "#f59e0b"
+                            : "currentColor"
+                        }
+                        strokeWidth={1.5}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    Driver Reliability Score: {reliabilityScore.toFixed(1)}/5
+                  </span>
+                </div>
+              )}
+              {isDriver && completedRidesCount > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  🚗 {completedRidesCount} completed rides
+                </p>
+              )}
+              {!isDriver && (
+                <p className="text-xs text-muted-foreground">
+                  Trust Score: {(user.averageRating || 0).toFixed(1)}/5
+                </p>
+              )}
+
+              {/* Cancellation warning */}
+              {(driverCancellations > 1 || passengerCancellations > 1) && (
+                <div className="flex items-center gap-1.5 mt-2 text-xs text-yellow-500">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  {driverCancellations > 1
+                    ? `⚠ ${driverCancellations} driver cancellations`
+                    : `⚠ ${passengerCancellations} passenger cancellations`}
+                </div>
+              )}
             </div>
           </div>
         </div>

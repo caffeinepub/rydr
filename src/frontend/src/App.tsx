@@ -9,9 +9,17 @@ import {
 } from "@tanstack/react-router";
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import { BottomNav } from "./components/BottomNav";
+import { ChunkErrorBoundary } from "./components/ChunkErrorBoundary";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
+import { OfflineBanner } from "./components/OfflineBanner";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import { RegisterModal } from "./components/RegisterModal";
+import { ChatSkeleton } from "./components/skeletons/ChatSkeleton";
+import { DashboardSkeleton } from "./components/skeletons/DashboardSkeleton";
+import { RideListSkeleton } from "./components/skeletons/RideListSkeleton";
+import { BrandingProvider } from "./context/BrandingContext";
 import { useInternetIdentity } from "./hooks/useGoogleAuth";
 import { useMyProfile } from "./hooks/useQueries";
 import { HomePage } from "./pages/HomePage";
@@ -42,7 +50,7 @@ const UserProfileViewPage = lazy(() =>
   })),
 );
 
-// Fallback loading state for lazy-loaded pages
+// Generic page loading fallback
 function PageFallback() {
   return (
     <div
@@ -54,6 +62,77 @@ function PageFallback() {
         <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     </div>
+  );
+}
+
+// Wrapped lazy page helpers
+function LazyDashboard() {
+  return (
+    <ChunkErrorBoundary>
+      <Suspense fallback={<DashboardSkeleton />}>
+        <DashboardPage />
+      </Suspense>
+    </ChunkErrorBoundary>
+  );
+}
+
+function LazyPostRide() {
+  return (
+    <ChunkErrorBoundary>
+      <Suspense fallback={<RideListSkeleton />}>
+        <PostRidePage />
+      </Suspense>
+    </ChunkErrorBoundary>
+  );
+}
+
+function LazyProfile() {
+  return (
+    <ChunkErrorBoundary>
+      <Suspense fallback={<PageFallback />}>
+        <ProfilePage />
+      </Suspense>
+    </ChunkErrorBoundary>
+  );
+}
+
+function LazyRideDetail() {
+  return (
+    <ChunkErrorBoundary>
+      <Suspense fallback={<RideListSkeleton />}>
+        <RideDetailPage />
+      </Suspense>
+    </ChunkErrorBoundary>
+  );
+}
+
+function LazyAdmin() {
+  return (
+    <ChunkErrorBoundary>
+      <Suspense fallback={<PageFallback />}>
+        <AdminPage />
+      </Suspense>
+    </ChunkErrorBoundary>
+  );
+}
+
+function LazyChat() {
+  return (
+    <ChunkErrorBoundary>
+      <Suspense fallback={<ChatSkeleton />}>
+        <ChatPage />
+      </Suspense>
+    </ChunkErrorBoundary>
+  );
+}
+
+function LazyUserProfile() {
+  return (
+    <ChunkErrorBoundary>
+      <Suspense fallback={<PageFallback />}>
+        <UserProfileViewPage />
+      </Suspense>
+    </ChunkErrorBoundary>
   );
 }
 
@@ -72,6 +151,7 @@ function RootLayout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
+      <OfflineBanner />
       <Navbar />
       {/* On mobile, bottom nav takes 64px — add padding so content isn't hidden behind it */}
       <div className="flex-1 md:pb-0 pb-16">
@@ -92,6 +172,7 @@ function RootLayout() {
 function StandaloneLayout() {
   return (
     <>
+      <OfflineBanner />
       <Outlet />
       <BottomNav />
       <Toaster richColors theme="dark" />
@@ -115,6 +196,12 @@ const welcomeRoute = createRoute({
   component: WelcomePage,
 });
 
+const adminRoute = createRoute({
+  getParentRoute: () => standaloneRoute,
+  path: "/admin",
+  component: LazyAdmin,
+});
+
 // Main app layout route
 const mainRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -122,6 +209,7 @@ const mainRoute = createRoute({
   component: RootLayout,
 });
 
+// ── Public routes (no login required) ──────────────────────────
 const homeRoute = createRoute({
   getParentRoute: () => mainRoute,
   path: "/",
@@ -138,47 +226,45 @@ const homeRoute = createRoute({
 const rideDetailRoute = createRoute({
   getParentRoute: () => mainRoute,
   path: "/ride/$rideId",
-  component: RideDetailPage,
-});
-
-const postRideRoute = createRoute({
-  getParentRoute: () => mainRoute,
-  path: "/post-ride",
-  component: PostRidePage,
-});
-
-const dashboardRoute = createRoute({
-  getParentRoute: () => mainRoute,
-  path: "/dashboard",
-  component: DashboardPage,
-});
-
-const profileRoute = createRoute({
-  getParentRoute: () => mainRoute,
-  path: "/profile",
-  component: ProfilePage,
+  component: LazyRideDetail,
 });
 
 const userProfileViewRoute = createRoute({
   getParentRoute: () => mainRoute,
   path: "/profile/$userId",
-  component: () => (
-    <Suspense fallback={<PageFallback />}>
-      <UserProfileViewPage />
-    </Suspense>
-  ),
+  component: LazyUserProfile,
 });
 
-const adminRoute = createRoute({
-  getParentRoute: () => standaloneRoute,
-  path: "/admin",
-  component: AdminPage,
+// ── Protected layout route ──────────────────────────────────────
+// ProtectedRoute checks auth and renders <Outlet /> or a sign-in prompt.
+const protectedLayoutRoute = createRoute({
+  getParentRoute: () => mainRoute,
+  id: "protected",
+  component: ProtectedRoute,
+});
+
+const postRideRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: "/post-ride",
+  component: LazyPostRide,
+});
+
+const dashboardRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: "/dashboard",
+  component: LazyDashboard,
+});
+
+const profileRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: "/profile",
+  component: LazyProfile,
 });
 
 const chatRoute = createRoute({
-  getParentRoute: () => mainRoute,
+  getParentRoute: () => protectedLayoutRoute,
   path: "/chat",
-  component: ChatPage,
+  component: LazyChat,
 });
 
 const routeTree = rootRoute.addChildren([
@@ -186,11 +272,13 @@ const routeTree = rootRoute.addChildren([
   mainRoute.addChildren([
     homeRoute,
     rideDetailRoute,
-    postRideRoute,
-    dashboardRoute,
-    profileRoute,
     userProfileViewRoute,
-    chatRoute,
+    protectedLayoutRoute.addChildren([
+      postRideRoute,
+      dashboardRoute,
+      profileRoute,
+      chatRoute,
+    ]),
   ]),
 ]);
 
@@ -205,8 +293,12 @@ declare module "@tanstack/react-router" {
 // ── App ────────────────────────────────────────────────────────
 export default function App() {
   return (
-    <Suspense fallback={<PageFallback />}>
-      <RouterProvider router={router} />
-    </Suspense>
+    <ErrorBoundary>
+      <BrandingProvider>
+        <Suspense fallback={<PageFallback />}>
+          <RouterProvider router={router} />
+        </Suspense>
+      </BrandingProvider>
+    </ErrorBoundary>
   );
 }

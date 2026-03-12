@@ -36,7 +36,6 @@ export function AdBanner({
       setAdFailed(true);
       return;
     }
-    // Lazy load: use IntersectionObserver to prevent UI blocking
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -54,7 +53,6 @@ export function AdBanner({
   useEffect(() => {
     if (!isVisible || !adConfig.isConfigured) return;
     try {
-      // Push ad after it becomes visible
       const adsbygoogle =
         (window as Window & { adsbygoogle?: unknown[] }).adsbygoogle || [];
       (adsbygoogle as unknown[]).push({});
@@ -63,12 +61,12 @@ export function AdBanner({
     }
   }, [isVisible]);
 
-  // Do not render if not configured — show fallback placeholder in development
   if (!adConfig.isConfigured) {
+    // Clean placeholder — no dashed border, no background card
     return (
       <div
         ref={adRef}
-        className={`flex items-center justify-center rounded-lg border border-dashed border-border bg-card/50 text-xs text-muted-foreground ${className}`}
+        className={`flex items-center justify-center rounded-lg text-xs text-muted-foreground/30 ${className}`}
         style={{
           minHeight: Math.min(dims.height, 90),
           width: "100%",
@@ -76,14 +74,11 @@ export function AdBanner({
         }}
         data-ocid={`ad.${placement.replace(/-/g, "_")}_banner`}
         aria-hidden="true"
-      >
-        <span className="opacity-40">Ad placeholder — {placement}</span>
-      </div>
+      />
     );
   }
 
   if (adFailed) {
-    // Silent fallback — no layout shift
     return <div style={{ minHeight: dims.height }} aria-hidden="true" />;
   }
 

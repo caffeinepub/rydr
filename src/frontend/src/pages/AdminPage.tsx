@@ -37,16 +37,21 @@ import {
   Loader2,
   Lock,
   MapPin,
+  Menu,
   MessageSquare,
+  Palette,
   Server,
   Settings,
   Shield,
+  Star,
   TrendingUp,
   Users,
   XCircle,
 } from "lucide-react";
+import React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useBranding } from "../context/BrandingContext";
 import { useActor } from "../hooks/useActor";
 import { useInternetIdentity } from "../hooks/useGoogleAuth";
 import { useIsAdmin } from "../hooks/useIsAdmin";
@@ -60,7 +65,9 @@ type TabId =
   | "disputes"
   | "fraud"
   | "analytics"
-  | "system";
+  | "system"
+  | "branding"
+  | "ratings";
 
 // ── Mock Data ──────────────────────────────────────────────────
 
@@ -391,6 +398,69 @@ const NAV_ITEMS: { id: TabId; label: string; icon: React.ReactNode }[] = [
     label: "System Health",
     icon: <Server className="h-4 w-4" />,
   },
+  {
+    id: "branding",
+    label: "Branding",
+    icon: <Palette className="h-4 w-4" />,
+  },
+  {
+    id: "ratings",
+    label: "User Ratings",
+    icon: <Star className="h-4 w-4" />,
+  },
+];
+
+const MOCK_RATINGS = [
+  {
+    id: 1,
+    reviewer: "Priya Sharma",
+    target: "Rahul Verma",
+    targetType: "driver" as const,
+    rating: 5,
+    comment: "Great ride!",
+    date: "2026-03-10",
+    flagged: false,
+  },
+  {
+    id: 2,
+    reviewer: "Rahul Verma",
+    target: "Anjali Patel",
+    targetType: "passenger" as const,
+    rating: 4,
+    comment: "On time.",
+    date: "2026-03-09",
+    flagged: false,
+  },
+  {
+    id: 3,
+    reviewer: "Vikram Singh",
+    target: "Kavya Reddy",
+    targetType: "driver" as const,
+    rating: 2,
+    comment: "Late by 30 min",
+    date: "2026-03-08",
+    flagged: true,
+  },
+  {
+    id: 4,
+    reviewer: "Anjali Patel",
+    target: "Priya Sharma",
+    targetType: "passenger" as const,
+    rating: 5,
+    comment: "Very polite.",
+    date: "2026-03-07",
+    flagged: false,
+  },
+  {
+    id: 5,
+    reviewer: "Kavya Reddy",
+    target: "Vikram Singh",
+    targetType: "driver" as const,
+    rating: 1,
+    comment: "Cancelled last minute",
+    date: "2026-03-06",
+    flagged: true,
+  },
 ];
 
 // ── Sub-components ─────────────────────────────────────────────
@@ -556,7 +626,7 @@ function DashboardTab() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="Total Users"
           value="1,247"
@@ -1058,7 +1128,7 @@ function FraudTab() {
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="border-red-500/30 bg-red-500/5">
           <CardContent className="pt-5 pb-5">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
@@ -1469,6 +1539,338 @@ function SystemTab() {
 
 // ── Main AdminPage ─────────────────────────────────────────────
 
+// ── Tab: Branding ──────────────────────────────────────────────
+
+function BrandingTab() {
+  const { branding, updateBranding } = useBranding();
+  const [primary, setPrimary] = useState(branding.primaryColor);
+  const [secondary, setSecondary] = useState(branding.secondaryColor);
+  const [logoUrl, setLogoUrl] = useState(branding.logoUrl);
+  const [appName, setAppName] = useState(branding.appName);
+
+  const [oauthClientId, setOauthClientId] = useState(
+    () => localStorage.getItem("RYDR_GOOGLE_CLIENT_ID") ?? "",
+  );
+
+  const handleSaveOAuth = () => {
+    localStorage.setItem("RYDR_GOOGLE_CLIENT_ID", oauthClientId.trim());
+    toast.success(
+      "Google OAuth Client ID saved! Real Google login is now active.",
+    );
+  };
+
+  const handleSave = () => {
+    updateBranding({
+      primaryColor: primary,
+      secondaryColor: secondary,
+      logoUrl,
+      appName,
+    });
+    toast.success("Branding settings saved! Theme updated across the app.");
+  };
+
+  return (
+    <div className="space-y-6" data-ocid="admin.branding.panel">
+      <div>
+        <h2 className="text-xl font-display font-black mb-1">
+          Platform Branding
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Customize logo, colors, and app name. Changes apply instantly across
+          the platform.
+        </p>
+      </div>
+
+      <Card className="border-border/50">
+        <CardHeader>
+          <CardTitle className="text-base">Logo &amp; App Name</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="branding-logo">
+              Logo URL (SVG/PNG/WebP) — leave empty for text logo
+            </Label>
+            <Input
+              id="branding-logo"
+              value={logoUrl}
+              onChange={(e) => setLogoUrl(e.target.value)}
+              placeholder="https://your-domain.com/logo.svg"
+              data-ocid="admin.branding.logo.input"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="branding-appname">App Name</Label>
+            <Input
+              id="branding-appname"
+              value={appName}
+              onChange={(e) => setAppName(e.target.value)}
+              placeholder="RYDR"
+              data-ocid="admin.branding.appname.input"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/50">
+        <CardHeader>
+          <CardTitle className="text-base">Theme Colors</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="branding-primary">
+                Primary Color (CTA buttons, highlights)
+              </Label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="branding-primary"
+                  type="color"
+                  value={primary}
+                  onChange={(e) => setPrimary(e.target.value)}
+                  className="h-10 w-16 rounded cursor-pointer border border-border bg-transparent"
+                  data-ocid="admin.branding.primary.input"
+                />
+                <Input
+                  value={primary}
+                  onChange={(e) => setPrimary(e.target.value)}
+                  className="flex-1 font-mono text-sm"
+                  placeholder="#00AEEF"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="branding-secondary">
+                Secondary Color (gradients, accents)
+              </Label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="branding-secondary"
+                  type="color"
+                  value={secondary}
+                  onChange={(e) => setSecondary(e.target.value)}
+                  className="h-10 w-16 rounded cursor-pointer border border-border bg-transparent"
+                  data-ocid="admin.branding.secondary.input"
+                />
+                <Input
+                  value={secondary}
+                  onChange={(e) => setSecondary(e.target.value)}
+                  className="flex-1 font-mono text-sm"
+                  placeholder="#1F7AE0"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Live preview */}
+          <div className="rounded-lg border border-border/50 p-4 space-y-3">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">
+              Live Preview
+            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <button
+                type="button"
+                className="px-4 py-2 rounded-lg text-sm font-bold text-white transition-transform hover:scale-105"
+                style={{ background: primary }}
+              >
+                Primary Button
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 rounded-lg text-sm font-bold text-white transition-transform hover:scale-105"
+                style={{ background: secondary }}
+              >
+                Secondary Button
+              </button>
+              <div
+                className="h-8 w-24 rounded-md"
+                style={{
+                  background: `linear-gradient(135deg, ${primary}, ${secondary})`,
+                }}
+              />
+              <span className="text-sm font-bold" style={{ color: primary }}>
+                {appName || "RYDR"}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Button
+        onClick={handleSave}
+        className="gap-2"
+        style={{ background: primary }}
+        data-ocid="admin.branding.save.button"
+      >
+        <Palette className="h-4 w-4" />
+        Save Branding
+      </Button>
+
+      {/* Authentication Settings */}
+      <Card className="border-border/50">
+        <CardHeader>
+          <CardTitle className="text-base">Authentication Settings</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="branding-oauth-client-id">
+              Google OAuth Client ID
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Paste your Client ID from Google Cloud Console to enable real
+              Google Sign-In popup. Leave empty to use the demo email form.
+            </p>
+            <Input
+              id="branding-oauth-client-id"
+              value={oauthClientId}
+              onChange={(e) => setOauthClientId(e.target.value)}
+              placeholder="123456789-abc.apps.googleusercontent.com"
+              data-ocid="branding.oauth_client_id_input"
+            />
+          </div>
+          <Button
+            onClick={handleSaveOAuth}
+            variant="outline"
+            className="gap-2"
+            data-ocid="branding.save_oauth_button"
+          >
+            Save OAuth Settings
+          </Button>
+          {oauthClientId && (
+            <p className="text-xs text-green-600 dark:text-green-400">
+              ✓ Real Google login is configured
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function RatingsTab() {
+  const [ratings, setRatings] = React.useState(MOCK_RATINGS);
+  const totalRatings = ratings.length;
+  const flaggedCount = ratings.filter((r) => r.flagged).length;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-black font-display">User Ratings</h2>
+        <p className="text-muted-foreground text-sm">
+          Monitor and moderate ratings across the platform.
+        </p>
+      </div>
+
+      {/* Summary */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-card border border-border rounded-lg p-4 text-center">
+          <p className="text-3xl font-black font-display text-primary">
+            {totalRatings}
+          </p>
+          <p className="text-sm text-muted-foreground">Total Ratings</p>
+        </div>
+        <div className="bg-card border border-border rounded-lg p-4 text-center">
+          <p className="text-3xl font-black font-display text-destructive">
+            {flaggedCount}
+          </p>
+          <p className="text-sm text-muted-foreground">Flagged Reviews</p>
+        </div>
+      </div>
+
+      <div
+        className="bg-card border border-border rounded-xl overflow-hidden"
+        data-ocid="admin.ratings.table"
+      >
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
+                Reviewer
+              </TableHead>
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
+                Target
+              </TableHead>
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
+                Type
+              </TableHead>
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
+                Rating
+              </TableHead>
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
+                Comment
+              </TableHead>
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
+                Date
+              </TableHead>
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
+                Actions
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {ratings.map((r, idx) => (
+              <TableRow
+                key={r.id}
+                className={r.flagged ? "bg-destructive/5" : undefined}
+              >
+                <TableCell className="font-medium text-sm">
+                  {r.reviewer}
+                </TableCell>
+                <TableCell className="text-sm">{r.target}</TableCell>
+                <TableCell>
+                  <Badge
+                    variant="outline"
+                    className={
+                      r.targetType === "driver"
+                        ? "border-primary/40 text-primary bg-primary/10 text-xs"
+                        : "border-muted text-muted-foreground text-xs"
+                    }
+                  >
+                    {r.targetType === "driver" ? "Driver" : "Passenger"}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        className="h-3.5 w-3.5"
+                        fill={s <= r.rating ? "#f59e0b" : "none"}
+                        stroke={s <= r.rating ? "#f59e0b" : "currentColor"}
+                        strokeWidth={1.5}
+                      />
+                    ))}
+                  </div>
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">
+                  {r.comment}
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  {r.date}
+                </TableCell>
+                <TableCell>
+                  {r.flagged && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-7 text-xs gap-1"
+                      onClick={() =>
+                        setRatings((prev) => prev.filter((x) => x.id !== r.id))
+                      }
+                      data-ocid={`admin.ratings.remove.button.${idx + 1}`}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
 export function AdminPage() {
   const navigate = useNavigate();
   const { data: isAdmin, isLoading } = useIsAdmin();
@@ -1477,6 +1879,7 @@ export function AdminPage() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [isClaiming, setIsClaiming] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleClaimAdmin = async () => {
     if (!actor) {
@@ -1629,6 +2032,10 @@ export function AdminPage() {
         return <AnalyticsTab />;
       case "system":
         return <SystemTab />;
+      case "branding":
+        return <BrandingTab />;
+      case "ratings":
+        return <RatingsTab />;
       default:
         return <DashboardTab />;
     }
@@ -1636,9 +2043,21 @@ export function AdminPage() {
 
   return (
     <div className="flex min-h-screen bg-background" data-ocid="admin.panel">
+      {/* Mobile sidebar backdrop */}
+      {sidebarOpen && (
+        // biome-ignore lint/a11y/useKeyWithClickEvents: backdrop close on click is intentional
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className="w-64 shrink-0 flex flex-col bg-card border-r border-border/50 sticky top-0 h-screen overflow-y-auto"
+        className={`fixed md:sticky top-0 z-50 md:z-auto h-screen w-64 shrink-0 flex flex-col bg-card border-r border-border/50 overflow-y-auto transition-transform duration-300 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
         data-ocid="admin.sidebar.panel"
       >
         {/* Logo */}
@@ -1672,7 +2091,10 @@ export function AdminPage() {
             <button
               key={item.id}
               type="button"
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => {
+                setActiveTab(item.id);
+                setSidebarOpen(false);
+              }}
               data-ocid={`admin.nav.${item.id}.link`}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${
                 activeTab === item.id
@@ -1716,7 +2138,24 @@ export function AdminPage() {
 
       {/* Main content */}
       <main className="flex-1 min-w-0 overflow-auto">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">{renderTab()}</div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+          {/* Mobile hamburger */}
+          <div className="md:hidden mb-4 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              data-ocid="admin.mobile_menu.button"
+              className="p-2 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <span className="font-semibold text-sm capitalize">
+              {activeTab}
+            </span>
+          </div>
+          {renderTab()}
+        </div>
       </main>
     </div>
   );

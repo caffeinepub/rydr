@@ -2,10 +2,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, MessageCircle, Send } from "lucide-react";
+import { ArrowLeft, Lock, MessageCircle, Phone, Send } from "lucide-react";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 
-// ── Types ──────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────
 
 type Message = {
   id: string;
@@ -22,9 +23,12 @@ type Conversation = {
   time: string;
   unread: number;
   messages: Message[];
+  phone?: string;
+  isPhoneHidden?: boolean;
+  isAccepted?: boolean; // false = awaiting driver acceptance
 };
 
-// ── Mock data ──────────────────────────────────────────────────
+// ── Mock data ────────────────────────────────────────────
 
 const CONVERSATIONS: Conversation[] = [
   {
@@ -34,6 +38,8 @@ const CONVERSATIONS: Conversation[] = [
     lastMessage: "See you at Mumbai Central at 7 AM!",
     time: "09:42 AM",
     unread: 2,
+    phone: "+919876543210",
+    isAccepted: true,
     messages: [
       {
         id: "m1",
@@ -68,6 +74,9 @@ const CONVERSATIONS: Conversation[] = [
     lastMessage: "Sure, luggage is fine. Just one bag?",
     time: "Yesterday",
     unread: 0,
+    phone: "+919823456789",
+    isPhoneHidden: true,
+    isAccepted: true,
     messages: [
       {
         id: "m1",
@@ -90,6 +99,8 @@ const CONVERSATIONS: Conversation[] = [
     lastMessage: "Booking confirmed! See you on Sunday.",
     time: "Mon",
     unread: 0,
+    phone: "+919701234567",
+    isAccepted: true,
     messages: [
       {
         id: "m1",
@@ -118,6 +129,7 @@ const CONVERSATIONS: Conversation[] = [
     lastMessage: "I'll share my live location closer to the date.",
     time: "Sun",
     unread: 1,
+    isAccepted: true,
     messages: [
       {
         id: "m1",
@@ -139,9 +151,51 @@ const CONVERSATIONS: Conversation[] = [
       },
     ],
   },
+  {
+    id: "conv-5",
+    name: "Arjun Mehta",
+    initials: "AM",
+    lastMessage: "Booking request sent",
+    time: "Just now",
+    unread: 0,
+    isAccepted: false,
+    messages: [],
+  },
 ];
 
-// ── Message Thread ─────────────────────────────────────────────
+// ── Call Button ──────────────────────────────────────────────
+
+function CallButton({ phone, name }: { phone: string; name: string }) {
+  const handleCall = () => {
+    if (window.innerWidth < 768) {
+      window.location.href = `tel:${phone}`;
+    } else {
+      navigator.clipboard
+        .writeText(phone)
+        .then(() => {
+          toast.success(`${name}'s number copied: ${phone}`);
+        })
+        .catch(() => {
+          toast.info(`${name}'s number: ${phone}`);
+        });
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCall}
+      className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-green-500/20 transition-colors"
+      aria-label={`Call ${name}`}
+      data-ocid="chat.call.button"
+      title={window.innerWidth < 768 ? `Call ${name}` : `Copy ${name}'s number`}
+    >
+      <Phone className="h-4 w-4 text-green-400" />
+    </button>
+  );
+}
+
+// ── Message Thread ───────────────────────────────────────────
 
 function MessageThread({
   conversation,
@@ -153,8 +207,10 @@ function MessageThread({
   const [messages, setMessages] = useState<Message[]>(conversation.messages);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const isAccepted = conversation.isAccepted !== false;
 
   const handleSend = () => {
+    if (!isAccepted) return;
     const text = input.trim();
     if (!text) return;
     const newMsg: Message = {
@@ -207,11 +263,48 @@ function MessageThread({
             {conversation.initials}
           </AvatarFallback>
         </Avatar>
-        <p className="font-bold text-sm text-foreground">{conversation.name}</p>
+        <p className="font-bold text-sm text-foreground flex-1">
+          {conversation.name}
+        </p>
+        {/* Call button — only when accepted and phone not hidden */}
+        {isAccepted && conversation.phone && !conversation.isPhoneHidden && (
+          <CallButton phone={conversation.phone} name={conversation.name} />
+        )}
       </div>
+
+      {/* Acceptance gate banner */}
+      {!isAccepted ? (
+        <div
+          className="px-4 py-3 text-xs text-center border-b border-border/30 flex items-center justify-center gap-2"
+          style={{ background: "oklch(0.12 0.05 60)" }}
+          data-ocid="chat.acceptance_gate.panel"
+        >
+          <Lock className="h-3.5 w-3.5 text-yellow-400 shrink-0" />
+          <span style={{ color: "oklch(0.85 0.12 80)" }}>
+            Chat will be available once the driver accepts your booking request.
+          </span>
+        </div>
+      ) : (
+        <div
+          className="px-4 py-2 text-xs text-center border-b border-border/30"
+          style={{
+            background: "oklch(0.10 0.03 240)",
+            color: "oklch(0.65 0.05 240)",
+          }}
+        >
+          {conversation.isPhoneHidden
+            ? "Driver has chosen to keep number private. Use chat to coordinate."
+            : "📱 Phone numbers are shared only after booking is confirmed."}
+        </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 min-h-0">
+        {messages.length === 0 && isAccepted && (
+          <div className="text-center text-muted-foreground text-sm py-8">
+            No messages yet. Say hi!
+          </div>
+        )}
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -251,9 +344,14 @@ function MessageThread({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
-          className="flex-1 h-9 text-sm bg-background border-border/50 rounded-full px-4 focus-visible:ring-1"
-          data-ocid="chat.input"
+          placeholder={
+            isAccepted
+              ? "Type a message..."
+              : "Chat locked — awaiting acceptance"
+          }
+          className="flex-1 h-9 text-sm bg-background border-border/50 rounded-full px-4 focus-visible:ring-1 disabled:opacity-60"
+          disabled={!isAccepted}
+          data-ocid="chat.message.input"
           style={{ fontFamily: '"Figtree", system-ui, sans-serif' }}
         />
         <Button
@@ -261,10 +359,14 @@ function MessageThread({
           size="icon"
           className="h-9 w-9 rounded-full shrink-0"
           onClick={handleSend}
-          disabled={!input.trim()}
+          disabled={!input.trim() || !isAccepted}
           data-ocid="chat.send_button"
           aria-label="Send message"
-          style={{ background: "oklch(0.72 0.22 145)" }}
+          style={{
+            background: isAccepted
+              ? "oklch(0.72 0.22 145)"
+              : "oklch(0.30 0.02 240)",
+          }}
         >
           <Send className="h-4 w-4 text-black" />
         </Button>
@@ -327,20 +429,34 @@ function ConversationList({
                 </Avatar>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center justify-between mb-0.5 gap-2">
                     <p className="font-bold text-sm text-foreground truncate">
                       {conv.name}
                     </p>
-                    <span className="text-[11px] text-muted-foreground shrink-0 ml-2">
-                      {conv.time}
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {conv.isAccepted === false && (
+                        <Lock
+                          className="h-3 w-3 text-yellow-400"
+                          aria-label="Awaiting acceptance"
+                        />
+                      )}
+                      <span className="text-[11px] text-muted-foreground">
+                        {conv.time}
+                      </span>
+                    </div>
                   </div>
                   <p className="text-sm text-muted-foreground truncate leading-snug">
-                    {conv.lastMessage}
+                    {conv.isAccepted === false ? (
+                      <span className="text-yellow-500/80 text-xs">
+                        🔒 Awaiting acceptance
+                      </span>
+                    ) : (
+                      conv.lastMessage
+                    )}
                   </p>
                 </div>
 
-                {conv.unread > 0 && (
+                {conv.unread > 0 && conv.isAccepted !== false && (
                   <Badge
                     className="shrink-0 h-5 min-w-5 px-1.5 text-[10px] font-bold rounded-full text-black"
                     style={{ background: "oklch(0.72 0.22 145)" }}
@@ -357,7 +473,7 @@ function ConversationList({
   );
 }
 
-// ── ChatPage ───────────────────────────────────────────────────
+// ── ChatPage ───────────────────────────────────────────────
 
 export function ChatPage() {
   const [activeConversation, setActiveConversation] =
