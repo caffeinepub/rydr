@@ -7,7 +7,8 @@ import {
   createRouter,
   redirect,
 } from "@tanstack/react-router";
-import React, { lazy, Suspense, useEffect, useState } from "react";
+import type React from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { BottomNav } from "./components/BottomNav";
 import { ChunkErrorBoundary } from "./components/ChunkErrorBoundary";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -47,6 +48,68 @@ const ChatPage = lazy(() =>
 const UserProfileViewPage = lazy(() =>
   import("./pages/UserProfileViewPage").then((m) => ({
     default: m.UserProfileViewPage,
+  })),
+);
+
+// Settings sub-pages (lazy)
+const AccountRatingsPage = lazy(() =>
+  import("./pages/settings/AccountRatingsPage").then((m) => ({
+    default: m.AccountRatingsPage,
+  })),
+);
+const AccountSavedPassengersPage = lazy(() =>
+  import("./pages/settings/AccountSavedPassengersPage").then((m) => ({
+    default: m.AccountSavedPassengersPage,
+  })),
+);
+const AccountCommunicationPage = lazy(() =>
+  import("./pages/settings/AccountCommunicationPage").then((m) => ({
+    default: m.AccountCommunicationPage,
+  })),
+);
+const AccountPasswordPage = lazy(() =>
+  import("./pages/settings/AccountPasswordPage").then((m) => ({
+    default: m.AccountPasswordPage,
+  })),
+);
+const AccountAddressPage = lazy(() =>
+  import("./pages/settings/AccountAddressPage").then((m) => ({
+    default: m.AccountAddressPage,
+  })),
+);
+const AccountPayoutMethodsPage = lazy(() =>
+  import("./pages/settings/AccountPayoutMethodsPage").then((m) => ({
+    default: m.AccountPayoutMethodsPage,
+  })),
+);
+const AccountPayoutsPage = lazy(() =>
+  import("./pages/settings/AccountPayoutsPage").then((m) => ({
+    default: m.AccountPayoutsPage,
+  })),
+);
+const AccountPaymentMethodsPage = lazy(() =>
+  import("./pages/settings/AccountPaymentMethodsPage").then((m) => ({
+    default: m.AccountPaymentMethodsPage,
+  })),
+);
+const AccountPaymentsPage = lazy(() =>
+  import("./pages/settings/AccountPaymentsPage").then((m) => ({
+    default: m.AccountPaymentsPage,
+  })),
+);
+const AccountHelpPage = lazy(() =>
+  import("./pages/settings/AccountHelpPage").then((m) => ({
+    default: m.AccountHelpPage,
+  })),
+);
+const AccountTermsPage = lazy(() =>
+  import("./pages/settings/AccountTermsPage").then((m) => ({
+    default: m.AccountTermsPage,
+  })),
+);
+const AccountDataPage = lazy(() =>
+  import("./pages/settings/AccountDataPage").then((m) => ({
+    default: m.AccountDataPage,
   })),
 );
 
@@ -135,6 +198,31 @@ function LazyUserProfile() {
     </ChunkErrorBoundary>
   );
 }
+
+function LazySettings(Page: React.ComponentType) {
+  return function SettingsWrapper() {
+    return (
+      <ChunkErrorBoundary>
+        <Suspense fallback={<PageFallback />}>
+          <Page />
+        </Suspense>
+      </ChunkErrorBoundary>
+    );
+  };
+}
+
+const LazyRatings = LazySettings(AccountRatingsPage);
+const LazySavedPassengers = LazySettings(AccountSavedPassengersPage);
+const LazyCommunication = LazySettings(AccountCommunicationPage);
+const LazyPassword = LazySettings(AccountPasswordPage);
+const LazyAddress = LazySettings(AccountAddressPage);
+const LazyPayoutMethods = LazySettings(AccountPayoutMethodsPage);
+const LazyPayouts = LazySettings(AccountPayoutsPage);
+const LazyPaymentMethods = LazySettings(AccountPaymentMethodsPage);
+const LazyPayments = LazySettings(AccountPaymentsPage);
+const LazyHelp = LazySettings(AccountHelpPage);
+const LazyTerms = LazySettings(AccountTermsPage);
+const LazyData = LazySettings(AccountDataPage);
 
 // ── Root layout (with Navbar + Footer) ────────────────────────
 function RootLayout() {
@@ -236,7 +324,6 @@ const userProfileViewRoute = createRoute({
 });
 
 // ── Protected layout route ──────────────────────────────────────
-// ProtectedRoute checks auth and renders <Outlet /> or a sign-in prompt.
 const protectedLayoutRoute = createRoute({
   getParentRoute: () => mainRoute,
   id: "protected",
@@ -267,6 +354,79 @@ const chatRoute = createRoute({
   component: LazyChat,
 });
 
+// ── Settings sub-routes (protected) ────────────────────────────
+const profileRatingsRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: "/profile/ratings",
+  component: LazyRatings,
+});
+
+const profileSavedPassengersRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: "/profile/saved-passengers",
+  component: LazySavedPassengers,
+});
+
+const profileCommunicationRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: "/profile/communication",
+  component: LazyCommunication,
+});
+
+const profilePasswordRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: "/profile/password",
+  component: LazyPassword,
+});
+
+const profileAddressRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: "/profile/address",
+  component: LazyAddress,
+});
+
+const profilePayoutMethodsRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: "/profile/payout-methods",
+  component: LazyPayoutMethods,
+});
+
+const profilePayoutsRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: "/profile/payouts",
+  component: LazyPayouts,
+});
+
+const profilePaymentMethodsRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: "/profile/payment-methods",
+  component: LazyPaymentMethods,
+});
+
+const profilePaymentsRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: "/profile/payments",
+  component: LazyPayments,
+});
+
+const profileHelpRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: "/profile/help",
+  component: LazyHelp,
+});
+
+const profileTermsRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: "/profile/terms",
+  component: LazyTerms,
+});
+
+const profileDataRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: "/profile/data",
+  component: LazyData,
+});
+
 const routeTree = rootRoute.addChildren([
   standaloneRoute.addChildren([welcomeRoute, adminRoute]),
   mainRoute.addChildren([
@@ -278,6 +438,19 @@ const routeTree = rootRoute.addChildren([
       dashboardRoute,
       profileRoute,
       chatRoute,
+      // Settings sub-routes
+      profileRatingsRoute,
+      profileSavedPassengersRoute,
+      profileCommunicationRoute,
+      profilePasswordRoute,
+      profileAddressRoute,
+      profilePayoutMethodsRoute,
+      profilePayoutsRoute,
+      profilePaymentMethodsRoute,
+      profilePaymentsRoute,
+      profileHelpRoute,
+      profileTermsRoute,
+      profileDataRoute,
     ]),
   ]),
 ]);
