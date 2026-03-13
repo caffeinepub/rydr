@@ -10,13 +10,20 @@ export function useMyProfile() {
     queryKey: ["myProfile"],
     queryFn: async () => {
       if (!actor) return null;
-      const result = await (actor as any).getMyProfile();
-      if (Array.isArray(result) && result.length === 0) return null;
-      if (Array.isArray(result) && result.length > 0)
-        return result[0] as UserPublic;
-      return (result as UserPublic) ?? null;
+      try {
+        const result = await (actor as any).getMyProfile();
+        if (Array.isArray(result) && result.length === 0) return null;
+        if (Array.isArray(result) && result.length > 0)
+          return result[0] as UserPublic;
+        return (result as UserPublic) ?? null;
+      } catch (err) {
+        console.error("[useMyProfile] error:", err);
+        return null;
+      }
     },
     enabled: !!actor && !isFetching,
+    retry: 1,
+    staleTime: 30000,
   });
 }
 
@@ -37,6 +44,9 @@ export function useRegisterUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myProfile"] });
     },
+    onError: (err) => {
+      console.error("[useRegisterUser] error:", err);
+    },
   });
 }
 
@@ -56,6 +66,9 @@ export function useUpdateProfile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+    },
+    onError: (err) => {
+      console.error("[useUpdateProfile] error:", err);
     },
   });
 }
@@ -80,29 +93,41 @@ export function useUpdateUserProfile() {
       facebookUrl: string;
       linkedinUrl: string;
     }) => {
-      if (!actor) throw new Error("Not connected");
-      const result = await actor.updateUserProfile(
-        params.name,
-        params.avatarUrl,
-        params.city,
-        params.about,
-        params.chatPref,
-        params.petsPreference,
-        params.smokingPreference,
-        params.luggagePreference,
-        params.carBrand,
-        params.carColor,
-        params.vehicleType,
-        params.licensePlate,
-        params.facebookUrl,
-        params.linkedinUrl,
-      );
-      if (result && "err" in result) throw new Error(result.err);
+      if (!actor) throw new Error("Not connected to backend");
+      let result: any;
+      try {
+        result = await actor.updateUserProfile(
+          params.name,
+          params.avatarUrl,
+          params.city,
+          params.about,
+          params.chatPref,
+          params.petsPreference,
+          params.smokingPreference,
+          params.luggagePreference,
+          params.carBrand,
+          params.carColor,
+          params.vehicleType,
+          params.licensePlate,
+          params.facebookUrl,
+          params.linkedinUrl,
+        );
+      } catch (err) {
+        console.error("[useUpdateUserProfile] backend call failed:", err);
+        throw new Error("Unable to update profile. Please try again.");
+      }
+      if (result && typeof result === "object" && "err" in result) {
+        console.error("[useUpdateUserProfile] backend error:", result.err);
+        throw new Error("Unable to update profile. Please try again.");
+      }
       return result?.ok ?? result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myProfile"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    },
+    onError: (err) => {
+      console.error("[useUpdateUserProfile] error:", err);
     },
   });
 }
@@ -113,13 +138,20 @@ export function useGetUserProfile(userId: string | undefined) {
     queryKey: ["userProfile", userId],
     queryFn: async () => {
       if (!actor || !userId) return null;
-      const result = await (actor as any).getUserProfile(userId);
-      if (Array.isArray(result) && result.length === 0) return null;
-      if (Array.isArray(result) && result.length > 0)
-        return result[0] as UserPublic;
-      return (result as UserPublic) ?? null;
+      try {
+        const result = await (actor as any).getUserProfile(userId);
+        if (Array.isArray(result) && result.length === 0) return null;
+        if (Array.isArray(result) && result.length > 0)
+          return result[0] as UserPublic;
+        return (result as UserPublic) ?? null;
+      } catch (err) {
+        console.error("[useGetUserProfile] error:", err);
+        return null;
+      }
     },
     enabled: !!actor && !isFetching && !!userId,
+    retry: 1,
+    staleTime: 30000,
   });
 }
 
@@ -136,11 +168,18 @@ export function useSearchRides(
     queryKey: ["searchRides", origin, destination, date],
     queryFn: async () => {
       if (!actor) return [];
-      return (actor as any).searchRides(origin, destination, date) as Promise<
-        Ride[]
-      >;
+      try {
+        return (actor as any).searchRides(origin, destination, date) as Promise<
+          Ride[]
+        >;
+      } catch (err) {
+        console.error("[useSearchRides] error:", err);
+        return [];
+      }
     },
     enabled: !!actor && !isFetching && enabled,
+    retry: 1,
+    staleTime: 30000,
   });
 }
 
@@ -150,12 +189,20 @@ export function useRideDetail(rideId: bigint | undefined) {
     queryKey: ["rideDetail", rideId?.toString()],
     queryFn: async () => {
       if (!actor || rideId === undefined) return null;
-      const result = await (actor as any).getRideDetail(rideId);
-      if (Array.isArray(result) && result.length === 0) return null;
-      if (Array.isArray(result) && result.length > 0) return result[0] as Ride;
-      return (result as Ride) ?? null;
+      try {
+        const result = await (actor as any).getRideDetail(rideId);
+        if (Array.isArray(result) && result.length === 0) return null;
+        if (Array.isArray(result) && result.length > 0)
+          return result[0] as Ride;
+        return (result as Ride) ?? null;
+      } catch (err) {
+        console.error("[useRideDetail] error:", err);
+        return null;
+      }
     },
     enabled: !!actor && !isFetching && rideId !== undefined,
+    retry: 1,
+    staleTime: 30000,
   });
 }
 
@@ -165,9 +212,16 @@ export function useMyPostedRides() {
     queryKey: ["myPostedRides"],
     queryFn: async () => {
       if (!actor) return [];
-      return (actor as any).getMyPostedRides() as Promise<Ride[]>;
+      try {
+        return (actor as any).getMyPostedRides() as Promise<Ride[]>;
+      } catch (err) {
+        console.error("[useMyPostedRides] error:", err);
+        return [];
+      }
     },
     enabled: !!actor && !isFetching,
+    retry: 1,
+    staleTime: 30000,
   });
 }
 
@@ -188,23 +242,35 @@ export function usePostRide() {
       approvalMode: ApprovalMode;
     }) => {
       if (!actor) throw new Error("Not connected");
-      const result = await (actor as any).postRide(
-        params.origin,
-        params.destination,
-        params.date,
-        params.departureTime,
-        params.totalSeats,
-        params.pricePerSeat,
-        params.petsAllowed,
-        params.smokingAllowed,
-        params.luggageAllowed,
-        params.approvalMode,
-      );
-      if (result && "err" in result) throw new Error(result.err);
+      let result: any;
+      try {
+        result = await (actor as any).postRide(
+          params.origin,
+          params.destination,
+          params.date,
+          params.departureTime,
+          params.totalSeats,
+          params.pricePerSeat,
+          params.petsAllowed,
+          params.smokingAllowed,
+          params.luggageAllowed,
+          params.approvalMode,
+        );
+      } catch (err) {
+        console.error("[usePostRide] error:", err);
+        throw new Error("Failed to post ride. Please try again.");
+      }
+      if (result && typeof result === "object" && "err" in result) {
+        console.error("[usePostRide] backend error:", result.err);
+        throw new Error("Failed to post ride. Please try again.");
+      }
       return result?.ok ?? result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myPostedRides"] });
+    },
+    onError: (err) => {
+      console.error("[usePostRide] mutation error:", err);
     },
   });
 }
@@ -215,13 +281,25 @@ export function useCompleteRide() {
   return useMutation({
     mutationFn: async (rideId: bigint) => {
       if (!actor) throw new Error("Not connected");
-      const result = await (actor as any).completeRide(rideId);
-      if ("err" in result) throw new Error(result.err);
+      let result: any;
+      try {
+        result = await (actor as any).completeRide(rideId);
+      } catch (err) {
+        console.error("[useCompleteRide] error:", err);
+        throw new Error("Failed to complete ride. Please try again.");
+      }
+      if (result && typeof result === "object" && "err" in result) {
+        console.error("[useCompleteRide] backend error:", result.err);
+        throw new Error("Failed to complete ride. Please try again.");
+      }
       return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myPostedRides"] });
       queryClient.invalidateQueries({ queryKey: ["rideDetail"] });
+    },
+    onError: (err) => {
+      console.error("[useCompleteRide] mutation error:", err);
     },
   });
 }
@@ -234,9 +312,16 @@ export function useMyBookings() {
     queryKey: ["myBookings"],
     queryFn: async () => {
       if (!actor) return [];
-      return (actor as any).getMyBookings() as Promise<Booking[]>;
+      try {
+        return (actor as any).getMyBookings() as Promise<Booking[]>;
+      } catch (err) {
+        console.error("[useMyBookings] error:", err);
+        return [];
+      }
     },
     enabled: !!actor && !isFetching,
+    retry: 1,
+    staleTime: 30000,
   });
 }
 
@@ -246,9 +331,18 @@ export function useBookingRequestsForDriver() {
     queryKey: ["bookingRequests"],
     queryFn: async () => {
       if (!actor) return [];
-      return (actor as any).getBookingRequestsForDriver() as Promise<Booking[]>;
+      try {
+        return (actor as any).getBookingRequestsForDriver() as Promise<
+          Booking[]
+        >;
+      } catch (err) {
+        console.error("[useBookingRequestsForDriver] error:", err);
+        return [];
+      }
     },
     enabled: !!actor && !isFetching,
+    retry: 1,
+    staleTime: 30000,
   });
 }
 
@@ -258,13 +352,25 @@ export function useBookRide() {
   return useMutation({
     mutationFn: async (rideId: bigint) => {
       if (!actor) throw new Error("Not connected");
-      const result = await (actor as any).bookRide(rideId);
-      if ("err" in result) throw new Error(result.err);
+      let result: any;
+      try {
+        result = await (actor as any).bookRide(rideId);
+      } catch (err) {
+        console.error("[useBookRide] error:", err);
+        throw new Error("Failed to book ride. Please try again.");
+      }
+      if (result && typeof result === "object" && "err" in result) {
+        console.error("[useBookRide] backend error:", result.err);
+        throw new Error("Failed to book ride. Please try again.");
+      }
       return result.ok as Booking;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myBookings"] });
       queryClient.invalidateQueries({ queryKey: ["rideDetail"] });
+    },
+    onError: (err) => {
+      console.error("[useBookRide] mutation error:", err);
     },
   });
 }
@@ -275,12 +381,24 @@ export function useApproveBooking() {
   return useMutation({
     mutationFn: async (bookingId: bigint) => {
       if (!actor) throw new Error("Not connected");
-      const result = await (actor as any).approveBooking(bookingId);
-      if ("err" in result) throw new Error(result.err);
+      let result: any;
+      try {
+        result = await (actor as any).approveBooking(bookingId);
+      } catch (err) {
+        console.error("[useApproveBooking] error:", err);
+        throw new Error("Failed to approve booking. Please try again.");
+      }
+      if (result && typeof result === "object" && "err" in result) {
+        console.error("[useApproveBooking] backend error:", result.err);
+        throw new Error("Failed to approve booking. Please try again.");
+      }
       return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookingRequests"] });
+    },
+    onError: (err) => {
+      console.error("[useApproveBooking] mutation error:", err);
     },
   });
 }
@@ -291,12 +409,24 @@ export function useRejectBooking() {
   return useMutation({
     mutationFn: async (bookingId: bigint) => {
       if (!actor) throw new Error("Not connected");
-      const result = await (actor as any).rejectBooking(bookingId);
-      if ("err" in result) throw new Error(result.err);
+      let result: any;
+      try {
+        result = await (actor as any).rejectBooking(bookingId);
+      } catch (err) {
+        console.error("[useRejectBooking] error:", err);
+        throw new Error("Failed to reject booking. Please try again.");
+      }
+      if (result && typeof result === "object" && "err" in result) {
+        console.error("[useRejectBooking] backend error:", result.err);
+        throw new Error("Failed to reject booking. Please try again.");
+      }
       return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookingRequests"] });
+    },
+    onError: (err) => {
+      console.error("[useRejectBooking] mutation error:", err);
     },
   });
 }
@@ -310,12 +440,24 @@ export function useRateDriver() {
       rating,
     }: { bookingId: bigint; rating: bigint }) => {
       if (!actor) throw new Error("Not connected");
-      const result = await (actor as any).rateDriver(bookingId, rating);
-      if ("err" in result) throw new Error(result.err);
+      let result: any;
+      try {
+        result = await (actor as any).rateDriver(bookingId, rating);
+      } catch (err) {
+        console.error("[useRateDriver] error:", err);
+        throw new Error("Failed to submit rating. Please try again.");
+      }
+      if (result && typeof result === "object" && "err" in result) {
+        console.error("[useRateDriver] backend error:", result.err);
+        throw new Error("Failed to submit rating. Please try again.");
+      }
       return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myBookings"] });
+    },
+    onError: (err) => {
+      console.error("[useRateDriver] mutation error:", err);
     },
   });
 }

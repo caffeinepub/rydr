@@ -2,27 +2,24 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "@tanstack/react-router";
 import {
-  Briefcase,
   Car,
   CheckCircle,
-  Cigarette,
   Edit3,
   ExternalLink,
   Linkedin,
   Loader2,
-  LogIn,
   LogOut,
   MapPin,
-  MessageCircle,
-  PawPrint,
   Phone,
   Save,
   ShieldCheck,
+  Star,
   Trash2,
   Upload,
   User,
@@ -69,6 +66,28 @@ async function compressImage(file: File): Promise<string> {
     img.onerror = reject;
     img.src = url;
   });
+}
+
+/**
+ * Calculate profile completion (0–6 fields).
+ * Fields: photo, name, phone, city, about, social/vehicle
+ */
+function calcCompletion(fields: {
+  avatarUrl: string;
+  name: string;
+  phoneNumber: string;
+  city: string;
+  about: string;
+  socialOrVehicle: boolean;
+}): number {
+  let done = 0;
+  if (fields.avatarUrl) done++;
+  if (fields.name.trim()) done++;
+  if (fields.phoneNumber.trim()) done++;
+  if (fields.city.trim()) done++;
+  if (fields.about.trim()) done++;
+  if (fields.socialOrVehicle) done++;
+  return done;
 }
 
 export function ProfilePage() {
@@ -166,7 +185,6 @@ export function ProfilePage() {
       toast.error("Name is required.");
       return;
     }
-    // Social link is mandatory for drivers
     if (userRole === "driver" && !facebookUrl.trim() && !linkedinUrl.trim()) {
       setSocialError(
         "Drivers must add a LinkedIn or Facebook profile to build rider trust.",
@@ -190,7 +208,6 @@ export function ProfilePage() {
         facebookUrl: facebookUrl.trim(),
         linkedinUrl: linkedinUrl.trim(),
       });
-      // Persist role, phone, gender locally since backend may not have these fields yet
       if (principalId) {
         try {
           const extra = { userRole, phoneNumber, gender, isPhoneHidden };
@@ -205,12 +222,9 @@ export function ProfilePage() {
       toast.success("Profile updated successfully!");
       setIsEditing(false);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "";
-      if (msg && !msg.includes("not a function") && !msg.includes("actor")) {
-        toast.error(msg);
-      } else {
-        toast.error("Unable to update profile. Please try again.");
-      }
+      // Never render raw error to DOM — log to console and show friendly message
+      console.error("[ProfilePage] handleSave error:", err);
+      toast.error("Unable to update profile. Please try again.");
     }
   };
 
@@ -258,7 +272,7 @@ export function ProfilePage() {
     );
   }
 
-  const initials = (profile?.name || "??")
+  const initials = (profile?.name || googleUser?.name || "??")
     .split(" ")
     .map((n: string) => n[0])
     .join("")
@@ -275,52 +289,113 @@ export function ProfilePage() {
   const displayFacebook = profile?.facebookUrl || facebookUrl;
   const displayLinkedin = profile?.linkedinUrl || linkedinUrl;
 
+  // Profile completion progress
+  const editSocialOrVehicle =
+    userRole === "driver"
+      ? !!(carBrand.trim() || vehicleType)
+      : !!(facebookUrl.trim() || linkedinUrl.trim());
+  const viewSocialOrVehicle =
+    userRole === "driver"
+      ? !!(profile?.carBrand || profile?.vehicleType)
+      : !!(profile?.facebookUrl || profile?.linkedinUrl);
+  const completionCount = calcCompletion({
+    avatarUrl: isEditing ? avatarUrl : profile?.avatarUrl || "",
+    name: isEditing ? name : profile?.name || "",
+    phoneNumber: isEditing ? phoneNumber : profile?.phoneNumber || "",
+    city: isEditing ? city : profile?.city || "",
+    about: isEditing ? about : profile?.about || "",
+    socialOrVehicle: isEditing ? editSocialOrVehicle : viewSocialOrVehicle,
+  });
+  const completionPct = Math.round((completionCount / 6) * 100);
+
   return (
-    <main className="container py-8 max-w-2xl px-4 sm:px-6">
+    <main className="container py-6 max-w-2xl px-4 sm:px-6 pb-24">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
+        className="space-y-4"
       >
-        <h1 className="font-display text-3xl font-black mb-6">My Profile</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="font-display text-3xl font-black">My Profile</h1>
+          <Button
+            variant="outline"
+            className="md:hidden gap-2 text-destructive border-destructive/30 hover:bg-destructive/10 text-sm"
+            size="sm"
+            onClick={() => {
+              clear();
+              navigate({ to: "/welcome" });
+            }}
+            data-ocid="profile.logout_button"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Sign Out
+          </Button>
+        </div>
 
-        {/* Mobile logout */}
-        <Button
-          variant="outline"
-          className="md:hidden w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10 mb-6"
-          onClick={() => {
-            clear();
-            navigate({ to: "/welcome" });
-          }}
-          data-ocid="profile.logout_button"
-        >
-          <LogOut className="h-4 w-4" />
-          Sign Out
-        </Button>
+        {/* ── Profile completion bar ── */}
+        {!profileLoading && (
+          <div
+            className="bg-card border border-border rounded-xl p-4"
+            data-ocid="profile.completion.card"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-semibold">Profile Completion</span>
+              <span
+                className="text-sm font-bold text-primary"
+                data-ocid="profile.completion.success_state"
+              >
+                {completionCount} of 6 complete
+              </span>
+            </div>
+            <Progress value={completionPct} className="h-2" />
+            {completionCount < 6 && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Complete your profile to build trust with riders and drivers.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* ── Profile header card ── */}
-        <div className="bg-card border border-border rounded-xl p-4 sm:p-6 mb-6">
+        <div className="bg-card border border-border rounded-xl p-4 sm:p-6">
           {profileLoading ? (
             <div className="flex items-center gap-4">
               <Skeleton className="h-20 w-20 rounded-full shrink-0" />
               <div className="space-y-2 flex-1 min-w-0">
                 <Skeleton className="h-6 w-40" />
                 <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-36" />
               </div>
             </div>
-          ) : profile ? (
+          ) : (
             <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
-              <Avatar className="h-20 w-20 text-xl shrink-0">
-                <AvatarImage src={profile.avatarUrl} />
-                <AvatarFallback className="bg-secondary text-secondary-foreground font-display font-black text-2xl">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+              {/* Avatar */}
+              <div className="relative shrink-0">
+                <Avatar className="h-20 w-20 text-xl ring-2 ring-primary/30">
+                  <AvatarImage
+                    src={profile?.avatarUrl || googleUser?.picture}
+                    className="object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                  <AvatarFallback className="bg-secondary text-secondary-foreground font-display font-black text-2xl">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                {completionCount === 6 && (
+                  <span className="absolute -bottom-1 -right-1 bg-green-500 text-white rounded-full p-0.5">
+                    <CheckCircle className="h-3.5 w-3.5" />
+                  </span>
+                )}
+              </div>
+
               <div className="flex-1 min-w-0">
                 <h2 className="font-display text-2xl font-black mb-1 break-words">
-                  {profile.name}
+                  {profile?.name || googleUser?.name || "Your Name"}
                 </h2>
-                {profile.city && (
+                {profile?.city && (
                   <p className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
                     <MapPin className="h-3.5 w-3.5" />
                     {profile.city}
@@ -328,40 +403,38 @@ export function ProfilePage() {
                 )}
                 {userRole && (
                   <span
-                    className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium mb-1 ${
+                    className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium mb-2 ${
                       userRole === "driver"
                         ? "bg-primary/10 text-primary border border-primary/30"
                         : "bg-muted text-muted-foreground border border-border"
                     }`}
                   >
-                    {userRole === "driver" ? "🚗 Driver" : "🧑‍💼 Rider"}
+                    {userRole === "driver" ? "🚗 Driver" : "🧑\u200d💼 Rider"}
                   </span>
                 )}
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <StarRating rating={profile.averageRating} size="md" />
-                  <span className="font-medium">
-                    {profile.averageRating.toFixed(1)}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    ({Number(profile.ratingCount)} ratings)
-                  </span>
-                </div>
-                {/* Social verification badges */}
+                {profile && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <StarRating rating={profile.averageRating} size="md" />
+                    <span className="font-medium text-sm">
+                      {profile.averageRating.toFixed(1)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      ({Number(profile.ratingCount)} ratings)
+                    </span>
+                  </div>
+                )}
                 {(hasFacebook || hasLinkedin) && (
-                  <div className="flex flex-wrap gap-2 mt-1">
+                  <div className="flex flex-wrap gap-2 mt-2">
                     {hasFacebook && (
                       <a
                         href={displayFacebook}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/40 bg-primary/5 text-primary text-xs font-medium hover:bg-primary/10 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-primary/40 bg-primary/5 text-primary text-xs font-medium hover:bg-primary/10 transition-colors"
                         data-ocid="profile.facebook_link"
                       >
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                        <span className="font-bold text-[10px] bg-[#1877F2] text-white px-1 py-0.5 rounded">
-                          f
-                        </span>
-                        Verified via Facebook
+                        <ShieldCheck className="h-3 w-3" />
+                        Facebook Verified
                         <ExternalLink className="h-3 w-3 opacity-60" />
                       </a>
                     )}
@@ -370,18 +443,19 @@ export function ProfilePage() {
                         href={displayLinkedin}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/40 bg-primary/5 text-primary text-xs font-medium hover:bg-primary/10 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-primary/40 bg-primary/5 text-primary text-xs font-medium hover:bg-primary/10 transition-colors"
                         data-ocid="profile.linkedin_link"
                       >
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                        <Linkedin className="h-3.5 w-3.5 text-[#0A66C2]" />
-                        Verified via LinkedIn
+                        <ShieldCheck className="h-3 w-3" />
+                        <Linkedin className="h-3 w-3 text-[#0A66C2]" />
+                        LinkedIn Verified
                         <ExternalLink className="h-3 w-3 opacity-60" />
                       </a>
                     )}
                   </div>
                 )}
               </div>
+
               <Button
                 variant="outline"
                 size="sm"
@@ -393,26 +467,13 @@ export function ProfilePage() {
                 {isEditing ? "Cancel" : "Edit"}
               </Button>
             </div>
-          ) : (
-            <div className="text-center py-4">
-              <p className="text-muted-foreground mb-3">
-                No profile set up yet.
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => setIsEditing(true)}
-                data-ocid="profile.setup_button"
-              >
-                Set Up Profile
-              </Button>
-            </div>
           )}
 
           {/* ── Edit form ── */}
           {isEditing && (
             <motion.form
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               onSubmit={handleSave}
               className="mt-4 pt-4 border-t border-border space-y-6"
             >
@@ -421,15 +482,15 @@ export function ProfilePage() {
                 <h3 className="font-display font-bold text-sm uppercase tracking-wider text-muted-foreground">
                   How will you use RYDR?
                 </h3>
-                <div className="flex gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setUserRole("driver")}
                     data-ocid="profile.role_driver.toggle"
-                    className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold border-2 transition-all ${
+                    className={`py-3 px-3 rounded-xl text-sm font-semibold border-2 transition-all text-center ${
                       userRole === "driver"
-                        ? "bg-[#00AEEF] text-white border-[#00AEEF] shadow-md"
-                        : "bg-background border-border text-foreground hover:border-[#00AEEF]/50"
+                        ? "bg-primary text-primary-foreground border-primary shadow-md"
+                        : "bg-background border-border text-foreground hover:border-primary/50"
                     }`}
                   >
                     🚗 Post Rides
@@ -441,13 +502,13 @@ export function ProfilePage() {
                     type="button"
                     onClick={() => setUserRole("rider")}
                     data-ocid="profile.role_rider.toggle"
-                    className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold border-2 transition-all ${
+                    className={`py-3 px-3 rounded-xl text-sm font-semibold border-2 transition-all text-center ${
                       userRole === "rider"
-                        ? "bg-[#00AEEF] text-white border-[#00AEEF] shadow-md"
-                        : "bg-background border-border text-foreground hover:border-[#00AEEF]/50"
+                        ? "bg-primary text-primary-foreground border-primary shadow-md"
+                        : "bg-background border-border text-foreground hover:border-primary/50"
                     }`}
                   >
-                    🧑‍💼 Book Rides
+                    🧑\u200d💼 Book Rides
                     <span className="block text-xs font-normal mt-0.5 opacity-80">
                       Rider
                     </span>
@@ -455,7 +516,7 @@ export function ProfilePage() {
                 </div>
               </div>
 
-              {/* Section 1: Basic Info */}
+              {/* Section: Basic Information */}
               <div className="space-y-4 pt-2 border-t border-border">
                 <h3 className="font-display font-bold text-sm uppercase tracking-wider text-muted-foreground">
                   Basic Information
@@ -464,10 +525,10 @@ export function ProfilePage() {
                 {/* Photo upload */}
                 <div className="space-y-2">
                   <Label>Profile Photo</Label>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-20 w-20 text-xl shrink-0">
-                      <AvatarImage src={avatarUrl} />
-                      <AvatarFallback className="bg-secondary text-secondary-foreground font-black text-2xl">
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <Avatar className="h-16 w-16 shrink-0 ring-2 ring-border">
+                      <AvatarImage src={avatarUrl} className="object-cover" />
+                      <AvatarFallback className="bg-secondary text-secondary-foreground font-black text-xl">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
@@ -522,32 +583,33 @@ export function ProfilePage() {
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="profile-city">City / Current Location</Label>
-                  <Input
-                    id="profile-city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="e.g. Mumbai, Delhi"
-                    data-ocid="profile.city_input"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="profile-phone"
-                    className="flex items-center gap-1.5"
-                  >
-                    <Phone className="h-3.5 w-3.5" /> Mobile Number
-                  </Label>
-                  <Input
-                    id="profile-phone"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="+91 9876543210"
-                    type="tel"
-                    data-ocid="profile.phone.input"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="profile-city">City</Label>
+                    <Input
+                      id="profile-city"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="e.g. Mumbai, Delhi"
+                      data-ocid="profile.city_input"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="profile-phone"
+                      className="flex items-center gap-1.5"
+                    >
+                      <Phone className="h-3.5 w-3.5" /> Mobile Number
+                    </Label>
+                    <Input
+                      id="profile-phone"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="+91 9876543210"
+                      type="tel"
+                      data-ocid="profile.phone.input"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -566,7 +628,6 @@ export function ProfilePage() {
                   </select>
                 </div>
 
-                {/* Phone privacy toggle for female users */}
                 {gender === "female" && (
                   <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border">
                     <div className="flex-1 min-w-0 mr-3">
@@ -600,7 +661,7 @@ export function ProfilePage() {
                 </div>
               </div>
 
-              {/* Section 2: Driver Info — only for drivers */}
+              {/* Section: Driver Info — only for drivers */}
               {userRole === "driver" && (
                 <div className="space-y-4 pt-2 border-t border-border">
                   <div>
@@ -611,7 +672,6 @@ export function ProfilePage() {
                       Required for posting rides
                     </p>
                   </div>
-
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label htmlFor="car-brand">Car Brand / Model</Label>
@@ -634,40 +694,42 @@ export function ProfilePage() {
                       />
                     </div>
                   </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="vehicle-type">Vehicle Type</Label>
-                    <select
-                      id="vehicle-type"
-                      value={vehicleType}
-                      onChange={(e) => setVehicleType(e.target.value)}
-                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      data-ocid="profile.vehicle_type_select"
-                    >
-                      <option value="">Select type</option>
-                      <option value="hatchback">Hatchback</option>
-                      <option value="sedan">Sedan</option>
-                      <option value="suv">SUV</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="license-plate">
-                      License Plate{" "}
-                      <span className="text-muted-foreground">(optional)</span>
-                    </Label>
-                    <Input
-                      id="license-plate"
-                      value={licensePlate}
-                      onChange={(e) => setLicensePlate(e.target.value)}
-                      placeholder="e.g. MH 04 AB 1234"
-                      data-ocid="profile.license_plate_input"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="vehicle-type">Vehicle Type</Label>
+                      <select
+                        id="vehicle-type"
+                        value={vehicleType}
+                        onChange={(e) => setVehicleType(e.target.value)}
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        data-ocid="profile.vehicle_type_select"
+                      >
+                        <option value="">Select type</option>
+                        <option value="hatchback">Hatchback</option>
+                        <option value="sedan">Sedan</option>
+                        <option value="suv">SUV</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="license-plate">
+                        License Plate{" "}
+                        <span className="text-muted-foreground text-xs">
+                          (optional)
+                        </span>
+                      </Label>
+                      <Input
+                        id="license-plate"
+                        value={licensePlate}
+                        onChange={(e) => setLicensePlate(e.target.value)}
+                        placeholder="e.g. MH 04 AB 1234"
+                        data-ocid="profile.license_plate_input"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Section 4: Social Profile */}
+              {/* Section: Social Profile */}
               <div className="space-y-4 pt-2 border-t border-border">
                 <div>
                   <h3 className="font-display font-bold text-sm uppercase tracking-wider text-muted-foreground">
@@ -685,9 +747,8 @@ export function ProfilePage() {
                     <div className="flex items-start gap-2">
                       <ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                       <p className="text-xs text-primary">
-                        As a driver, adding a social profile helps passengers
-                        verify your identity and increases booking rates. Add
-                        your LinkedIn or Facebook profile below.
+                        Adding a social profile helps passengers verify your
+                        identity and increases booking rates.
                       </p>
                     </div>
                   </div>
@@ -759,102 +820,135 @@ export function ProfilePage() {
           )}
         </div>
 
-        {/* ── View mode: About ── */}
-        {!isEditing && profile?.about && (
-          <div className="bg-card border border-border rounded-xl p-4 sm:p-5 mb-4">
-            <h3 className="font-display font-bold text-sm uppercase tracking-wider text-muted-foreground mb-2">
-              About
-            </h3>
-            <p className="text-sm leading-relaxed">{profile.about}</p>
-          </div>
-        )}
-
-        {/* ── View mode: Driver Info ── */}
-        {!isEditing && profile && (profile.carBrand || profile.vehicleType) && (
-          <div className="bg-card border border-border rounded-xl p-4 sm:p-5 mb-4">
-            <h3 className="font-display font-bold text-sm uppercase tracking-wider text-muted-foreground mb-3">
-              Vehicle
-            </h3>
-            <div className="flex items-center gap-3">
-              <Car className="h-5 w-5 text-primary shrink-0" />
-              <div>
-                <p className="font-medium">
-                  {[
-                    profile.carBrand,
-                    profile.carColor,
-                    profile.vehicleType
-                      ? profile.vehicleType.charAt(0).toUpperCase() +
-                        profile.vehicleType.slice(1)
-                      : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-                {profile.licensePlate && (
-                  <p className="text-sm text-muted-foreground">
-                    License: {profile.licensePlate}
+        {/* ── View mode sections ── */}
+        {!isEditing && (
+          <>
+            {/* Personal Info section */}
+            {profile && (profile.about || profile.city) && (
+              <div className="bg-card border border-border rounded-xl p-4 sm:p-5">
+                <h3 className="font-display font-bold text-sm uppercase tracking-wider text-muted-foreground mb-3">
+                  About
+                </h3>
+                {profile.about && (
+                  <p className="text-sm leading-relaxed mb-2">
+                    {profile.about}
+                  </p>
+                )}
+                {profile.city && (
+                  <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5" /> {profile.city}
                   </p>
                 )}
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
-          <StatCard
-            label="Rides Posted"
-            value={myRides?.length ?? 0}
-            icon={<Car className="h-4 w-4 text-primary" />}
-          />
-          <StatCard
-            label="Completed"
-            value={completedRides}
-            icon={<CheckCircle className="h-4 w-4 text-primary" />}
-          />
-          <StatCard
-            label="Trips Taken"
-            value={confirmedBookings}
-            icon={<Car className="h-4 w-4 text-primary" />}
-          />
-          <StatCard
-            label="Rating"
-            value={profile ? `${profile.averageRating.toFixed(1)} ★` : "—"}
-            icon={<User className="h-4 w-4 text-primary" />}
-          />
-        </div>
-
-        {/* Recent rides */}
-        {myRides && myRides.length > 0 && (
-          <div className="bg-card border border-border rounded-xl p-4 sm:p-5">
-            <h3 className="font-display font-bold mb-4">Recent Posted Rides</h3>
-            <div className="space-y-2">
-              {myRides.slice(0, 5).map((ride) => (
-                <div
-                  key={ride.id.toString()}
-                  className="flex items-center justify-between text-sm py-2 border-b border-border last:border-0 gap-2"
-                >
-                  <span className="truncate min-w-0 flex-1">
-                    {ride.origin} → {ride.destination}
-                  </span>
-                  <div className="flex items-center gap-2 text-muted-foreground shrink-0">
-                    <span className="hidden sm:inline">{ride.date}</span>
-                    <span className="text-xs">
-                      {"active" in ride.status
-                        ? "Active"
-                        : "completed" in ride.status
-                          ? "Done"
-                          : "Cancelled"}
-                    </span>
+            {/* Driver Info */}
+            {profile && (profile.carBrand || profile.vehicleType) && (
+              <div className="bg-card border border-border rounded-xl p-4 sm:p-5">
+                <h3 className="font-display font-bold text-sm uppercase tracking-wider text-muted-foreground mb-3">
+                  Vehicle
+                </h3>
+                <div className="flex items-center gap-3">
+                  <Car className="h-5 w-5 text-primary shrink-0" />
+                  <div>
+                    <p className="font-semibold">
+                      {[
+                        profile.carBrand,
+                        profile.carColor,
+                        profile.vehicleType
+                          ? profile.vehicleType.charAt(0).toUpperCase() +
+                            profile.vehicleType.slice(1)
+                          : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                    {profile.licensePlate && (
+                      <p className="text-sm text-muted-foreground">
+                        License: {profile.licensePlate}
+                      </p>
+                    )}
                   </div>
                 </div>
-              ))}
+              </div>
+            )}
+
+            {/* Trust & Ratings */}
+            <div className="bg-card border border-border rounded-xl p-4 sm:p-5">
+              <h3 className="font-display font-bold text-sm uppercase tracking-wider text-muted-foreground mb-4">
+                Trust &amp; Ratings
+              </h3>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <StatCard
+                  label="Rides Posted"
+                  value={myRides?.length ?? 0}
+                  icon={<Car className="h-4 w-4 text-primary" />}
+                />
+                <StatCard
+                  label="Completed"
+                  value={completedRides}
+                  icon={<CheckCircle className="h-4 w-4 text-green-500" />}
+                />
+                <StatCard
+                  label="Trips Taken"
+                  value={confirmedBookings}
+                  icon={<User className="h-4 w-4 text-primary" />}
+                />
+                <StatCard
+                  label="Rating"
+                  value={
+                    profile ? `${profile.averageRating.toFixed(1)} ★` : "—"
+                  }
+                  icon={<Star className="h-4 w-4 text-amber-400" />}
+                />
+              </div>
             </div>
-          </div>
+
+            {/* Recent Activity */}
+            {myRides && myRides.length > 0 && (
+              <div className="bg-card border border-border rounded-xl p-4 sm:p-5">
+                <h3 className="font-display font-bold text-sm uppercase tracking-wider text-muted-foreground mb-4">
+                  Recent Activity
+                </h3>
+                <div className="space-y-2">
+                  {myRides.slice(0, 5).map((ride) => (
+                    <div
+                      key={ride.id.toString()}
+                      className="flex items-center justify-between text-sm py-2 border-b border-border last:border-0 gap-2"
+                    >
+                      <span className="truncate min-w-0 flex-1">
+                        {ride.origin} → {ride.destination}
+                      </span>
+                      <div className="flex items-center gap-2 text-muted-foreground shrink-0">
+                        <span className="hidden sm:inline text-xs">
+                          {ride.date}
+                        </span>
+                        <span
+                          className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                            "active" in ride.status
+                              ? "bg-primary/10 text-primary"
+                              : "completed" in ride.status
+                                ? "bg-green-500/10 text-green-400"
+                                : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {"active" in ride.status
+                            ? "Active"
+                            : "completed" in ride.status
+                              ? "Done"
+                              : "Cancelled"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Desktop sign out */}
-        <div className="hidden md:flex justify-end mt-8">
+        <div className="hidden md:flex justify-end mt-4">
           <Button
             variant="outline"
             className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
@@ -883,9 +977,9 @@ function StatCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="bg-card border border-border rounded-xl p-3 sm:p-4 flex flex-col gap-1">
+    <div className="bg-background border border-border rounded-lg p-3 flex flex-col gap-1">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">{label}</span>
+        <span className="text-xs text-muted-foreground truncate">{label}</span>
         {icon}
       </div>
       <p className="text-xl font-display font-black">{value}</p>
