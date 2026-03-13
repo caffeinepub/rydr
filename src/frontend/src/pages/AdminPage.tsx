@@ -51,7 +51,7 @@ import {
 import React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useBranding } from "../context/BrandingContext";
+import { PRESET_THEMES, useBranding } from "../context/BrandingContext";
 import { useActor } from "../hooks/useActor";
 import { useInternetIdentity } from "../hooks/useGoogleAuth";
 import { useIsAdmin } from "../hooks/useIsAdmin";
@@ -1542,7 +1542,7 @@ function SystemTab() {
 // ── Tab: Branding ──────────────────────────────────────────────
 
 function BrandingTab() {
-  const { branding, updateBranding } = useBranding();
+  const { branding, updateBranding, activeThemeId, setTheme } = useBranding();
   const [primary, setPrimary] = useState(branding.primaryColor);
   const [secondary, setSecondary] = useState(branding.secondaryColor);
   const [logoUrl, setLogoUrl] = useState(branding.logoUrl);
@@ -1576,10 +1576,70 @@ function BrandingTab() {
           Platform Branding
         </h2>
         <p className="text-sm text-muted-foreground">
-          Customize logo, colors, and app name. Changes apply instantly across
-          the platform.
+          Customize logo, colors, and app name. Changes apply instantly.
         </p>
       </div>
+
+      {/* Preset Themes */}
+      <Card className="border-border/50">
+        <CardHeader>
+          <CardTitle className="text-base">Preset Themes</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Switch between 5 pre-built themes instantly. Each theme updates
+            colors, backgrounds, and cards across the entire app.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {PRESET_THEMES.map((theme) => {
+              const isActive = activeThemeId === theme.id;
+              return (
+                <button
+                  key={theme.id}
+                  type="button"
+                  onClick={() => setTheme(theme.id)}
+                  data-ocid={`admin.theme.${theme.id}.button`}
+                  className="relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  style={{
+                    backgroundColor: theme.cardColor,
+                    borderColor: isActive
+                      ? theme.primaryColor
+                      : "rgba(0,0,0,0.1)",
+                    boxShadow: isActive
+                      ? `0 0 0 2px ${theme.primaryColor}40`
+                      : "none",
+                  }}
+                >
+                  {isActive && (
+                    <span
+                      className="absolute -top-1.5 -right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white"
+                      style={{ background: theme.primaryColor }}
+                    >
+                      Active
+                    </span>
+                  )}
+                  <div className="flex gap-1.5">
+                    <div
+                      className="w-5 h-5 rounded-full border border-white/30"
+                      style={{ background: theme.primaryColor }}
+                    />
+                    <div
+                      className="w-5 h-5 rounded-full border border-white/30"
+                      style={{ background: theme.secondaryColor }}
+                    />
+                  </div>
+                  <span
+                    className="text-[10px] font-semibold text-center leading-tight"
+                    style={{ color: theme.textColor }}
+                  >
+                    {theme.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-border/50">
         <CardHeader>
@@ -1613,14 +1673,15 @@ function BrandingTab() {
 
       <Card className="border-border/50">
         <CardHeader>
-          <CardTitle className="text-base">Theme Colors</CardTitle>
+          <CardTitle className="text-base">Custom Theme Colors</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Override the active preset with custom colors.
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="branding-primary">
-                Primary Color (CTA buttons, highlights)
-              </Label>
+              <Label htmlFor="branding-primary">Primary Color</Label>
               <div className="flex items-center gap-2">
                 <input
                   id="branding-primary"
@@ -1639,9 +1700,7 @@ function BrandingTab() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="branding-secondary">
-                Secondary Color (gradients, accents)
-              </Label>
+              <Label htmlFor="branding-secondary">Secondary Color</Label>
               <div className="flex items-center gap-2">
                 <input
                   id="branding-secondary"
@@ -1655,7 +1714,7 @@ function BrandingTab() {
                   value={secondary}
                   onChange={(e) => setSecondary(e.target.value)}
                   className="flex-1 font-mono text-sm"
-                  placeholder="#1F7AE0"
+                  placeholder="#0B3D91"
                 />
               </div>
             </div>
@@ -1669,14 +1728,14 @@ function BrandingTab() {
             <div className="flex items-center gap-3 flex-wrap">
               <button
                 type="button"
-                className="px-4 py-2 rounded-lg text-sm font-bold text-white transition-transform hover:scale-105"
+                className="px-4 py-2 rounded-lg text-sm font-bold text-white"
                 style={{ background: primary }}
               >
                 Primary Button
               </button>
               <button
                 type="button"
-                className="px-4 py-2 rounded-lg text-sm font-bold text-white transition-transform hover:scale-105"
+                className="px-4 py-2 rounded-lg text-sm font-bold text-white"
                 style={{ background: secondary }}
               >
                 Secondary Button
@@ -1687,9 +1746,6 @@ function BrandingTab() {
                   background: `linear-gradient(135deg, ${primary}, ${secondary})`,
                 }}
               />
-              <span className="text-sm font-bold" style={{ color: primary }}>
-                {appName || "RYDR"}
-              </span>
             </div>
           </div>
         </CardContent>
@@ -1717,27 +1773,28 @@ function BrandingTab() {
             </Label>
             <p className="text-xs text-muted-foreground">
               Paste your Client ID from Google Cloud Console to enable real
-              Google Sign-In popup. Leave empty to use the demo email form.
+              Google Sign-In popup.
             </p>
             <Input
               id="branding-oauth-client-id"
               value={oauthClientId}
               onChange={(e) => setOauthClientId(e.target.value)}
-              placeholder="123456789-abc.apps.googleusercontent.com"
-              data-ocid="branding.oauth_client_id_input"
+              placeholder="1234567890-abc123.apps.googleusercontent.com"
+              data-ocid="admin.branding.oauth.input"
             />
           </div>
           <Button
             onClick={handleSaveOAuth}
             variant="outline"
             className="gap-2"
-            data-ocid="branding.save_oauth_button"
+            data-ocid="admin.branding.oauth.save_button"
           >
             Save OAuth Settings
           </Button>
-          {oauthClientId && (
-            <p className="text-xs text-green-600 dark:text-green-400">
-              ✓ Real Google login is configured
+          {!oauthClientId && (
+            <p className="text-xs text-muted-foreground">
+              No Client ID configured — app is using the demo email form for
+              login.
             </p>
           )}
         </CardContent>

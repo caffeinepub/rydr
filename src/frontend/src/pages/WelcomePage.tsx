@@ -70,7 +70,6 @@ function CitySkylne() {
         <rect x="0" y="120" width="60" height="80" fill="white" />
         <rect x="20" y="90" width="30" height="110" fill="white" />
         <rect x="70" y="130" width="50" height="70" fill="white" />
-        <rect x="80" y="100" width="20" height="100" fill="white" />
         <rect x="140" y="80" width="70" height="120" fill="white" />
         <rect x="165" y="50" width="25" height="150" fill="white" />
         <rect x="220" y="110" width="55" height="90" fill="white" />
@@ -78,13 +77,11 @@ function CitySkylne() {
         <rect x="320" y="40" width="30" height="160" fill="white" />
         <rect x="380" y="100" width="60" height="100" fill="white" />
         <rect x="450" y="90" width="75" height="110" fill="white" />
-        <rect x="470" y="60" width="30" height="140" fill="white" />
         <rect x="540" y="120" width="50" height="80" fill="white" />
         <rect x="600" y="60" width="90" height="140" fill="white" />
         <rect x="635" y="30" width="25" height="170" fill="white" />
         <rect x="700" y="100" width="65" height="100" fill="white" />
         <rect x="780" y="80" width="80" height="120" fill="white" />
-        <rect x="810" y="50" width="25" height="150" fill="white" />
         <rect x="870" y="110" width="55" height="90" fill="white" />
         <rect x="940" y="70" width="75" height="130" fill="white" />
         <rect x="1030" y="90" width="70" height="110" fill="white" />
@@ -116,16 +113,13 @@ const stepTransition = {
   ease: [0.32, 0, 0.67, 0] as [number, number, number, number],
 };
 
-/* ─── Progress dots ─────────────────────────────────────────── */
+/* ─── Progress dots (4 total) ───────────────────────────────── */
 function ProgressDots({ step }: { step: number }) {
   return (
     <div className="flex items-center gap-2">
-      {[0, 1, 2].map((i) => (
+      {[0, 1, 2, 3].map((i) => (
         <motion.div
           key={i}
-          data-ocid={
-            `welcome.progress_dot.${i + 1}` as `welcome.progress_dot.${number}`
-          }
           animate={{
             width: i === step ? 24 : 8,
             opacity: i === step ? 1 : 0.35,
@@ -139,13 +133,7 @@ function ProgressDots({ step }: { step: number }) {
 }
 
 /* ─── Bullet point row ──────────────────────────────────────── */
-function BulletRow({
-  icon,
-  text,
-}: {
-  icon: React.ReactNode;
-  text: string;
-}) {
+function BulletRow({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div className="flex items-center gap-3">
       <div
@@ -159,6 +147,8 @@ function BulletRow({
   );
 }
 
+const HEADING_FONT = '"Plus Jakarta Sans", "Outfit", system-ui, sans-serif';
+
 /* ─── Main WelcomePage ──────────────────────────────────────── */
 export function WelcomePage() {
   const navigate = useNavigate();
@@ -166,38 +156,32 @@ export function WelcomePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const reduceMotion = useReducedMotion();
 
+  // Steps: 0 = Feature slide 1, 1 = Feature slide 2, 2 = Feature slide 3, 3 = Login
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
 
   const goNext = useCallback(() => {
     setDirection(1);
-    setStep((s) => s + 1);
+    setStep((s) => Math.min(s + 1, 3));
   }, []);
 
   const goBack = () => {
     setDirection(-1);
-    setStep((s) => s - 1);
+    setStep((s) => Math.max(s - 1, 0));
   };
-
-  const handleGetStarted = () => {
-    goNext();
-  };
-
-  const handleLogin = () => {
-    login();
-  };
-
-  // When user completes login via the modal, advance to next step
-  useEffect(() => {
-    if (isAuthenticated && step === 0) {
-      goNext();
-    }
-  }, [isAuthenticated, step, goNext]);
 
   const handleEnterApp = () => {
     localStorage.setItem("rydr_welcomed", "1");
     navigate({ to: "/" });
   };
+
+  // After login succeeds while on step 3, go to app
+  useEffect(() => {
+    if (isAuthenticated && step === 3) {
+      localStorage.setItem("rydr_welcomed", "1");
+      navigate({ to: "/" });
+    }
+  }, [isAuthenticated, step, navigate]);
 
   /* Animated road/lane canvas */
   useEffect(() => {
@@ -218,7 +202,6 @@ export function WelcomePage() {
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       const centerX = canvas.width / 2;
       const horizon = canvas.height * 0.55;
       const numLanes = 5;
@@ -240,7 +223,6 @@ export function WelcomePage() {
       offset = (offset + 1.2) % 50;
       animId = requestAnimationFrame(draw);
     };
-
     draw();
 
     return () => {
@@ -248,6 +230,21 @@ export function WelcomePage() {
       window.removeEventListener("resize", resize);
     };
   }, []);
+
+  const ctaStyle = {
+    fontFamily: HEADING_FONT,
+    fontWeight: 700,
+    background:
+      "linear-gradient(135deg, oklch(0.55 0.20 240), oklch(0.65 0.18 210), oklch(0.72 0.15 195))",
+    boxShadow:
+      "0 0 25px oklch(0.55 0.20 240 / 0.5), 0 4px 16px rgba(0,0,0,0.3)",
+  };
+
+  const featureIconBox = {
+    background:
+      "linear-gradient(135deg, oklch(0.55 0.20 240 / 0.2), oklch(0.72 0.15 195 / 0.1))",
+    border: "1px solid oklch(0.55 0.20 240 / 0.3)",
+  };
 
   return (
     <div
@@ -257,22 +254,17 @@ export function WelcomePage() {
           "radial-gradient(ellipse at 50% 0%, oklch(0.15 0.08 240) 0%, oklch(0.08 0.04 240) 45%, oklch(0.05 0.02 240) 100%)",
       }}
     >
-      {/* Animated road canvas */}
       <canvas
         ref={canvasRef}
         className="absolute inset-0 w-full h-full pointer-events-none"
         style={{ touchAction: "none" }}
       />
-
-      {/* Particle field */}
       <ParticleField />
-
-      {/* City skyline */}
       <CitySkylne />
 
       {/* Ambient glow orbs */}
       <div
-        className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full pointer-events-none animate-pulse-glow"
+        className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full pointer-events-none"
         style={{
           background:
             "radial-gradient(circle, oklch(0.55 0.20 240 / 0.05) 0%, transparent 70%)",
@@ -280,18 +272,8 @@ export function WelcomePage() {
         }}
         aria-hidden="true"
       />
-      <div
-        className="absolute top-1/3 right-1/4 w-80 h-80 rounded-full pointer-events-none animate-pulse-glow"
-        style={{
-          background:
-            "radial-gradient(circle, oklch(0.72 0.15 195 / 0.04) 0%, transparent 70%)",
-          filter: "blur(50px)",
-          animationDelay: "1.5s",
-        }}
-        aria-hidden="true"
-      />
 
-      {/* Step content area */}
+      {/* Step content */}
       <div className="relative z-10 w-full max-w-md px-4 sm:px-6 flex flex-col items-center">
         <div className="w-full overflow-hidden">
           <AnimatePresence mode="wait" custom={direction}>
@@ -305,139 +287,84 @@ export function WelcomePage() {
               transition={stepTransition}
               className="flex flex-col items-center text-center w-full"
             >
-              {/* ── Step 0: Welcome ─────────────────────────── */}
+              {/* ── Step 0: Find Rides ───────────────────────── */}
               {step === 0 && (
-                <div className="flex flex-col items-center w-full">
-                  {/* Logo — clean, no glow, just float + scale animation */}
-                  <div className="relative mb-6">
-                    <div
-                      className="animate-float"
-                      style={{ willChange: "transform" }}
-                    >
-                      <motion.div
-                        animate={
-                          reduceMotion ? { scale: 1 } : { scale: [1, 1.05, 1] }
-                        }
-                        transition={{
-                          duration: 3,
-                          ease: "easeInOut",
-                          repeat: Number.POSITIVE_INFINITY,
-                        }}
-                      >
-                        <img
-                          src="/assets/uploads/file_00000000650c720883073dd037e87b31-1.png"
-                          alt="RYDR — Your City, Your Ride"
-                          className="w-52 sm:w-64 md:w-72 h-auto mx-auto"
-                          loading="eager"
-                          decoding="async"
-                        />
-                      </motion.div>
-                    </div>
-                  </div>
-
-                  <h1
-                    className="text-3xl font-black text-white mb-2"
-                    style={{
-                      fontFamily:
-                        '"Plus Jakarta Sans", "Outfit", system-ui, sans-serif',
-                      fontWeight: 800,
-                    }}
-                  >
-                    Welcome to Rydr
-                  </h1>
-                  <p
-                    className="text-base text-white/60 mb-10 tracking-widest uppercase"
-                    style={{ letterSpacing: "0.15em" }}
-                  >
-                    Your City, Your Ride
-                  </p>
-
-                  {/* Buttons */}
-                  <div className="flex flex-col gap-3 w-full max-w-xs">
-                    <motion.button
-                      type="button"
-                      onClick={handleGetStarted}
-                      data-ocid="welcome.get_started_button"
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      className="w-full py-4 rounded-full text-sm font-bold text-white"
-                      style={{
-                        fontFamily:
-                          '"Plus Jakarta Sans", "Outfit", system-ui, sans-serif',
-                        fontWeight: 700,
-                        background:
-                          "linear-gradient(135deg, oklch(0.55 0.20 240), oklch(0.65 0.18 210), oklch(0.72 0.15 195))",
-                        boxShadow:
-                          "0 0 25px oklch(0.55 0.20 240 / 0.5), 0 4px 16px rgba(0,0,0,0.3)",
-                      }}
-                    >
-                      Get Started
-                    </motion.button>
-
-                    <motion.button
-                      type="button"
-                      onClick={handleLogin}
-                      disabled={isLoggingIn}
-                      data-ocid="welcome.login_button"
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      className="w-full py-4 rounded-full text-sm font-bold text-white/80 border border-white/20 hover:border-primary/50 transition-colors"
-                      style={{
-                        fontFamily:
-                          '"Plus Jakarta Sans", "Outfit", system-ui, sans-serif',
-                        fontWeight: 600,
-                        background: "oklch(0.55 0.20 240 / 0.08)",
-                      }}
-                    >
-                      {isLoggingIn ? "Signing in…" : "Login"}
-                    </motion.button>
-                  </div>
-                </div>
-              )}
-
-              {/* ── Step 1: Find or Share ────────────────────── */}
-              {step === 1 && (
                 <div className="flex flex-col items-center w-full py-4">
                   <div
                     className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, oklch(0.55 0.20 240 / 0.2), oklch(0.72 0.15 195 / 0.1))",
-                      border: "1px solid oklch(0.55 0.20 240 / 0.3)",
-                    }}
+                    style={featureIconBox}
                   >
-                    <Car className="h-10 w-10 text-primary" />
+                    <Search className="h-10 w-10 text-primary" />
                   </div>
-
                   <h2
                     className="text-2xl font-black text-white mb-2"
-                    style={{
-                      fontFamily:
-                        '"Plus Jakarta Sans", "Outfit", system-ui, sans-serif',
-                      fontWeight: 800,
-                    }}
+                    style={{ fontFamily: HEADING_FONT, fontWeight: 800 }}
                   >
-                    Find or Share Rides Easily
+                    Find rides, save money
                   </h2>
                   <p className="text-sm text-white/50 mb-8">
                     Smart carpooling across India
                   </p>
-
                   <div className="flex flex-col gap-4 w-full text-left">
                     <BulletRow
                       icon={<Search className="h-4 w-4" />}
-                      text="Search rides quickly"
+                      text="Search rides between cities in seconds"
                     />
                     <BulletRow
                       icon={<Users className="h-4 w-4" />}
-                      text="Share empty seats"
+                      text="Split costs with verified travellers"
                     />
                     <BulletRow
                       icon={<Zap className="h-4 w-4" />}
-                      text="Travel smarter"
+                      text="Smart matching by route & preferences"
                     />
                   </div>
+                  <motion.button
+                    type="button"
+                    onClick={goNext}
+                    data-ocid="welcome.step0_next_button"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="w-full mt-10 py-4 rounded-full text-sm font-bold text-white"
+                    style={ctaStyle}
+                  >
+                    Next
+                  </motion.button>
+                </div>
+              )}
 
+              {/* ── Step 1: Post a Ride ──────────────────────── */}
+              {step === 1 && (
+                <div className="flex flex-col items-center w-full py-4">
+                  <div
+                    className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6"
+                    style={featureIconBox}
+                  >
+                    <Car className="h-10 w-10 text-primary" />
+                  </div>
+                  <h2
+                    className="text-2xl font-black text-white mb-2"
+                    style={{ fontFamily: HEADING_FONT, fontWeight: 800 }}
+                  >
+                    Post a ride, fill empty seats
+                  </h2>
+                  <p className="text-sm text-white/50 mb-8">
+                    Earn by sharing your journey
+                  </p>
+                  <div className="flex flex-col gap-4 w-full text-left">
+                    <BulletRow
+                      icon={<Car className="h-4 w-4" />}
+                      text="Publish your route in under 2 minutes"
+                    />
+                    <BulletRow
+                      icon={<Users className="h-4 w-4" />}
+                      text="Choose how many passengers to accept"
+                    />
+                    <BulletRow
+                      icon={<Zap className="h-4 w-4" />}
+                      text="Set your own price per seat"
+                    />
+                  </div>
                   <motion.button
                     type="button"
                     onClick={goNext}
@@ -445,83 +372,159 @@ export function WelcomePage() {
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
                     className="w-full mt-10 py-4 rounded-full text-sm font-bold text-white"
-                    style={{
-                      fontFamily:
-                        '"Plus Jakarta Sans", "Outfit", system-ui, sans-serif',
-                      fontWeight: 700,
-                      background:
-                        "linear-gradient(135deg, oklch(0.55 0.20 240), oklch(0.65 0.18 210), oklch(0.72 0.15 195))",
-                      boxShadow:
-                        "0 0 25px oklch(0.55 0.20 240 / 0.5), 0 4px 16px rgba(0,0,0,0.3)",
-                    }}
+                    style={ctaStyle}
                   >
                     Next
                   </motion.button>
                 </div>
               )}
 
-              {/* ── Step 2: Safe & Community ─────────────────── */}
+              {/* ── Step 2: Verified & Trusted ───────────────── */}
               {step === 2 && (
                 <div className="flex flex-col items-center w-full py-4">
                   <div
                     className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, oklch(0.55 0.20 240 / 0.2), oklch(0.72 0.15 195 / 0.1))",
-                      border: "1px solid oklch(0.55 0.20 240 / 0.3)",
-                    }}
+                    style={featureIconBox}
                   >
                     <ShieldCheck className="h-10 w-10 text-primary" />
                   </div>
-
                   <h2
                     className="text-2xl font-black text-white mb-2"
-                    style={{
-                      fontFamily:
-                        '"Plus Jakarta Sans", "Outfit", system-ui, sans-serif',
-                      fontWeight: 800,
-                    }}
+                    style={{ fontFamily: HEADING_FONT, fontWeight: 800 }}
                   >
-                    Safe & Community Driven
+                    Verified, safe &amp; trusted
                   </h2>
                   <p className="text-sm text-white/50 mb-8">
                     Your safety is our top priority
                   </p>
-
                   <div className="flex flex-col gap-4 w-full text-left">
                     <BulletRow
                       icon={<UserCheck className="h-4 w-4" />}
-                      text="Verified drivers"
+                      text="Social-verified driver profiles"
                     />
                     <BulletRow
                       icon={<Lock className="h-4 w-4" />}
-                      text="Secure rides"
+                      text="Ratings & reliability scores for all users"
                     />
                     <BulletRow
                       icon={<Star className="h-4 w-4" />}
-                      text="Smart matching"
+                      text="Chat unlocks only after ride confirmation"
                     />
                   </div>
-
                   <motion.button
                     type="button"
-                    onClick={handleEnterApp}
-                    data-ocid="welcome.step2_enter_button"
+                    onClick={goNext}
+                    data-ocid="welcome.step2_next_button"
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
                     className="w-full mt-10 py-4 rounded-full text-sm font-bold text-white"
-                    style={{
-                      fontFamily:
-                        '"Plus Jakarta Sans", "Outfit", system-ui, sans-serif',
-                      fontWeight: 700,
-                      background:
-                        "linear-gradient(135deg, oklch(0.55 0.20 240), oklch(0.65 0.18 210), oklch(0.72 0.15 195))",
-                      boxShadow:
-                        "0 0 25px oklch(0.55 0.20 240 / 0.5), 0 4px 16px rgba(0,0,0,0.3)",
-                    }}
+                    style={ctaStyle}
                   >
-                    Enter App
+                    Get Started
                   </motion.button>
+                </div>
+              )}
+
+              {/* ── Step 3: Login screen ─────────────────────── */}
+              {step === 3 && (
+                <div className="flex flex-col items-center w-full py-4">
+                  {/* Logo */}
+                  <div className="relative mb-6">
+                    <motion.div
+                      animate={
+                        reduceMotion ? { scale: 1 } : { scale: [1, 1.04, 1] }
+                      }
+                      transition={{
+                        duration: 3,
+                        ease: "easeInOut",
+                        repeat: Number.POSITIVE_INFINITY,
+                      }}
+                    >
+                      <img
+                        src="/assets/uploads/file_00000000650c720883073dd037e87b31-1.png"
+                        alt="RYDR"
+                        className="w-44 sm:w-52 h-auto mx-auto"
+                        loading="eager"
+                        decoding="async"
+                      />
+                    </motion.div>
+                  </div>
+
+                  <h1
+                    className="text-3xl font-black text-white mb-2"
+                    style={{ fontFamily: HEADING_FONT, fontWeight: 800 }}
+                  >
+                    Welcome to RYDR
+                  </h1>
+                  <p
+                    className="text-sm text-white/60 mb-10 tracking-widest uppercase"
+                    style={{ letterSpacing: "0.15em" }}
+                  >
+                    Your City, Your Ride
+                  </p>
+
+                  <div className="flex flex-col gap-3 w-full max-w-xs">
+                    {isAuthenticated ? (
+                      <motion.button
+                        type="button"
+                        onClick={handleEnterApp}
+                        data-ocid="welcome.enter_app_button"
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="w-full py-4 rounded-full text-sm font-bold text-white"
+                        style={ctaStyle}
+                      >
+                        Enter App
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        type="button"
+                        onClick={() => login()}
+                        disabled={isLoggingIn}
+                        data-ocid="welcome.google_login_button"
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="w-full py-4 rounded-full text-sm font-bold text-white flex items-center justify-center gap-3"
+                        style={ctaStyle}
+                      >
+                        {isLoggingIn ? (
+                          "Signing in…"
+                        ) : (
+                          <>
+                            <svg
+                              width="18"
+                              height="18"
+                              viewBox="0 0 24 24"
+                              aria-hidden="true"
+                            >
+                              <path
+                                fill="#fff"
+                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                              />
+                              <path
+                                fill="rgba(255,255,255,0.8)"
+                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                              />
+                              <path
+                                fill="rgba(255,255,255,0.6)"
+                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+                              />
+                              <path
+                                fill="rgba(255,255,255,0.4)"
+                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                              />
+                            </svg>
+                            Sign in with Google
+                          </>
+                        )}
+                      </motion.button>
+                    )}
+                  </div>
+
+                  <p className="mt-6 text-xs text-white/30 text-center max-w-xs">
+                    By signing in, you agree to our terms and community
+                    guidelines.
+                  </p>
                 </div>
               )}
             </motion.div>

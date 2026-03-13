@@ -12,13 +12,11 @@ import {
   LayoutDashboard,
   LogIn,
   LogOut,
-  Moon,
   PlusCircle,
   Shield,
-  Sun,
   User,
 } from "lucide-react";
-import { useDarkMode } from "../hooks/useDarkMode";
+import { useBranding } from "../context/BrandingContext";
 import { useInternetIdentity } from "../hooks/useGoogleAuth";
 import { useIsAdmin } from "../hooks/useIsAdmin";
 import { useMyProfile } from "../hooks/useQueries";
@@ -28,7 +26,7 @@ export function Navbar() {
   const { data: profile } = useMyProfile();
   const { data: isAdmin } = useIsAdmin();
   const navigate = useNavigate();
-  const { isDark, toggle: toggleDark } = useDarkMode();
+  const { branding } = useBranding();
   const isLoggedIn = !!identity;
 
   const initials = profile?.name
@@ -41,30 +39,49 @@ export function Navbar() {
     : "?";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg hidden md:block">
+    <header
+      className="sticky top-0 z-50 w-full hidden md:block"
+      style={{ background: "#0B3D91", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}
+    >
       <div className="container flex h-14 items-center justify-between">
-        {/* Brand wordmark */}
+        {/* Brand logo / wordmark */}
         <Link
           to="/"
           data-ocid="nav.home_link"
-          className="flex items-center hover:opacity-80 transition-opacity"
+          className="flex items-center gap-2 hover:opacity-85 transition-opacity"
         >
-          <span
-            className="font-black text-xl text-white"
-            style={{
-              fontFamily:
-                '"Plus Jakarta Sans", "Outfit", system-ui, sans-serif',
-              fontWeight: 800,
-              letterSpacing: "0.05em",
-            }}
-          >
-            Rydr
-          </span>
+          {branding.logoUrl ? (
+            <img
+              src={branding.logoUrl}
+              alt={branding.appName || "RYDR"}
+              style={{ height: "32px", width: "auto", objectFit: "contain" }}
+            />
+          ) : (
+            <span
+              style={{
+                fontFamily:
+                  '"Plus Jakarta Sans", "Outfit", system-ui, sans-serif',
+                fontWeight: 800,
+                fontSize: "1.35rem",
+                letterSpacing: "0.06em",
+                color: "#ffffff",
+              }}
+            >
+              RYDR
+            </span>
+          )}
         </Link>
 
         {/* Nav links */}
         <nav className="hidden md:flex items-center gap-1">
-          <Button asChild variant="ghost" size="sm" data-ocid="nav.home_link">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            data-ocid="nav.home_link"
+            style={{ color: "rgba(255,255,255,0.85)" }}
+            className="hover:bg-white/10 hover:text-white"
+          >
             <Link to="/">Find Rides</Link>
           </Button>
           {isLoggedIn && (
@@ -74,6 +91,8 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 data-ocid="nav.post_ride_link"
+                style={{ color: "rgba(255,255,255,0.85)" }}
+                className="hover:bg-white/10 hover:text-white"
               >
                 <Link to="/post-ride">Post Ride</Link>
               </Button>
@@ -82,6 +101,8 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 data-ocid="nav.dashboard_link"
+                style={{ color: "rgba(255,255,255,0.85)" }}
+                className="hover:bg-white/10 hover:text-white"
               >
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
@@ -91,32 +112,24 @@ export function Navbar() {
 
         {/* Auth actions */}
         <div className="flex items-center gap-2">
-          {/* Dark mode toggle */}
-          <button
-            type="button"
-            onClick={toggleDark}
-            className="flex items-center justify-center h-8 w-8 rounded-lg transition-all hover:bg-muted"
-            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            data-ocid="nav.theme_toggle"
-          >
-            {isDark ? (
-              <Sun className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <Moon className="h-4 w-4 text-muted-foreground" />
-            )}
-          </button>
-
           {isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
                   data-ocid="nav.profile_link"
                 >
-                  <Avatar className="h-8 w-8 border border-border">
+                  <Avatar className="h-8 w-8 border-2 border-white/40">
                     <AvatarImage src={profile?.avatarUrl} />
-                    <AvatarFallback className="bg-secondary text-secondary-foreground text-xs font-bold">
+                    <AvatarFallback
+                      style={{
+                        background: "#00AEEF",
+                        color: "#fff",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                      }}
+                    >
                       {initials}
                     </AvatarFallback>
                   </Avatar>
@@ -170,11 +183,17 @@ export function Navbar() {
               onClick={login}
               disabled={isLoggingIn}
               size="sm"
-              className="gap-1.5 bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm"
+              style={{
+                background: "#ffffff",
+                color: "#0B3D91",
+                border: "none",
+                fontWeight: 600,
+              }}
+              className="hover:bg-gray-100 gap-1.5 shadow-sm"
               data-ocid="nav.login_button"
             >
               <LogIn className="h-4 w-4" />
-              {isLoggingIn ? "Signing in..." : "Sign in with Google"}
+              {isLoggingIn ? "Signing in..." : "Sign in"}
             </Button>
           )}
         </div>
