@@ -252,3 +252,197 @@
 .animate-glow-pulse {
   animation: glow-pulse 2s ease-in-out infinite;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Bottom Navigation – Premium Ride-Sharing Style
+   Inspired by Uber / BlaBlaCar
+═══════════════════════════════════════════════════════════════ */
+
+/* Nav bar surface */
+.bottom-nav-bar {
+  /* Light mode: white surface */
+  --nav-bg: #ffffff;
+  --nav-border: rgba(0, 0, 0, 0.08);
+  --nav-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08), 0 -1px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Dark mode overrides */
+.dark .bottom-nav-bar,
+html:not(.light) .bottom-nav-bar {
+  --nav-bg: oklch(0.09 0.03 240 / 0.97);
+  --nav-border: oklch(0.22 0.04 240);
+  --nav-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4), 0 -1px 0 oklch(0.22 0.04 240);
+}
+
+.bottom-nav-surface {
+  background: var(--nav-bg);
+  border-top: 1px solid var(--nav-border);
+  box-shadow: var(--nav-shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Regular nav tab button */
+.nav-tab-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+  height: 100%;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 4px 4px 6px;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Active indicator pill above icon */
+.nav-active-bar {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--rydr-primary, #00AEEF);
+  transform-origin: center;
+}
+
+/* Icon states */
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+}
+
+.nav-icon-active {
+  color: var(--rydr-primary, #00AEEF);
+}
+
+.nav-icon-inactive {
+  /* Light mode: medium gray */
+  color: #9ca3af;
+}
+
+.dark .nav-icon-inactive,
+html:not(.light) .nav-icon-inactive {
+  color: oklch(0.45 0.03 240);
+}
+
+/* Label states */
+.nav-label {
+  font-family: "Plus Jakarta Sans", "Outfit", system-ui, sans-serif;
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.nav-label-active {
+  font-weight: 700;
+  color: var(--rydr-primary, #00AEEF);
+}
+
+.nav-label-inactive {
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+.dark .nav-label-inactive,
+html:not(.light) .nav-label-inactive {
+  color: oklch(0.45 0.03 240);
+}
+
+/* ─── Chat notification badge ────────────────────────────────── */
+.chat-badge {
+  position: absolute;
+  top: -5px;
+  right: -7px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--nav-bg, #ffffff);
+  pointer-events: none;
+}
+
+/* ─── Floating Publish Button ────────────────────────────────── */
+.publish-float-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: flex-end;
+  padding-bottom: 6px;
+}
+
+.publish-btn-inner {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--rydr-primary, #00AEEF);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 4px 16px rgba(0, 174, 239, 0.45),
+    0 2px 6px rgba(0, 174, 239, 0.3),
+    0 0 0 3px rgba(0, 174, 239, 0.12);
+  /* Float up above nav bar */
+  margin-top: -22px;
+  flex-shrink: 0;
+  will-change: transform;
+  transition: box-shadow 0.2s ease;
+}
+
+.publish-float-btn:hover .publish-btn-inner {
+  box-shadow:
+    0 6px 24px rgba(0, 174, 239, 0.55),
+    0 3px 10px rgba(0, 174, 239, 0.35),
+    0 0 0 4px rgba(0, 174, 239, 0.18);
+}
+
+.publish-label {
+  font-family: "Plus Jakarta Sans", "Outfit", system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--rydr-primary, #00AEEF);
+  white-space: nowrap;
+}
+
+.dark .publish-label,
+html:not(.light) .publish-label {
+  color: var(--rydr-primary, #00AEEF);
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .publish-btn-inner,
+  .nav-icon,
+  .nav-active-bar {
+    transition: none;
+    animation: none;
+  }
+}

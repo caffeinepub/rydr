@@ -54,42 +54,6 @@ function saveRecentSearch(s: RecentSearch) {
   }
 }
 
-const SAMPLE_RIDES = [
-  {
-    origin: "Mumbai Central",
-    destination: "Pune Station",
-    date: "2026-03-10",
-    time: "08:00",
-    price: 450,
-    seats: 3,
-    driver: "Rajesh Kumar",
-    rating: 4.8,
-    trips: 127,
-  },
-  {
-    origin: "Delhi Connaught Place",
-    destination: "Agra Taj Mahal",
-    date: "2026-03-11",
-    time: "06:30",
-    price: 350,
-    seats: 2,
-    driver: "Priya Sharma",
-    rating: 4.9,
-    trips: 203,
-  },
-  {
-    origin: "Bangalore MG Road",
-    destination: "Mysore Palace",
-    date: "2026-03-12",
-    time: "07:00",
-    price: 280,
-    seats: 4,
-    driver: "Arjun Patel",
-    rating: 4.7,
-    trips: 89,
-  },
-];
-
 const FEATURES = [
   {
     icon: <Zap className="h-5 w-5" />,
@@ -179,7 +143,6 @@ export function HomePage() {
     setDestCoords({ lat: result.lat, lng: result.lng });
   };
 
-  // Score, filter, and sort rides by match quality
   const scoredRides = useMemo(() => {
     if (!searchResults) return [];
     let rides = searchResults;
@@ -212,7 +175,6 @@ export function HomePage() {
           borderBottom: "1px solid oklch(0.22 0.04 240 / 0.5)",
         }}
       >
-        {/* Ambient glow */}
         <div
           className="absolute inset-0 pointer-events-none overflow-hidden"
           aria-hidden="true"
@@ -456,14 +418,12 @@ export function HomePage() {
 
           {/* AdSense placeholder */}
           <div
-            className="w-full rounded-lg border border-dashed border-border/50 flex items-center justify-center text-xs text-muted-foreground/50 mt-4"
+            className="w-full rounded-lg flex items-center justify-center text-xs text-muted-foreground/50 mt-4"
             style={{ minHeight: "90px", background: "transparent" }}
             data-ad-placement="home-below-search"
             data-ocid="home.adsense_placeholder"
           >
-            {import.meta.env.VITE_GOOGLE_ADSENSE_CLIENT_ID ? null : (
-              <span>Ad space</span>
-            )}
+            {import.meta.env.VITE_GOOGLE_ADSENSE_CLIENT_ID ? null : null}
           </div>
         </div>
       </section>
@@ -571,63 +531,50 @@ export function HomePage() {
         />
       </div>
 
-      {/* ── Popular routes ──────────────────────────────────── */}
+      {/* ── How it works (replaces sample rides) ──────────────── */}
       {!searchEnabled && (
         <section className="container mb-14">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-xl font-black">
-              Popular routes near you
-            </h2>
-            <span className="text-xs text-muted-foreground">Sample rides</span>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {SAMPLE_RIDES.map((r, i) => (
+          <h2 className="font-display text-xl font-black mb-6">
+            How RYDR works
+          </h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              {
+                step: "1",
+                title: "Search a ride",
+                desc: "Enter your origin, destination and date. Our smart matching engine finds drivers on your route.",
+              },
+              {
+                step: "2",
+                title: "Book your seat",
+                desc: "Select a ride that suits you, pay your share, and get instant or driver-approved confirmation.",
+              },
+              {
+                step: "3",
+                title: "Travel together",
+                desc: "Meet your driver, enjoy the ride, and rate each other after arrival. Safe, simple, affordable.",
+              },
+            ].map((item, i) => (
               <motion.div
-                key={r.origin}
+                key={item.step}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-card border border-[#00AEEF]/30 rounded-xl p-4 card-hover shadow-[0_0_8px_rgba(0,174,239,0.08)]"
+                className="bg-card border border-[#00AEEF]/30 rounded-xl p-5"
                 data-ocid={
-                  `home.ride.item.${i + 1}` as `home.ride.item.${number}`
+                  `home.howit.item.${i + 1}` as `home.howit.item.${number}`
                 }
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="w-2.5 h-2.5 rounded-full bg-primary" />
-                    <div className="w-px h-8 bg-border" />
-                    <div className="w-2.5 h-2.5 rounded-full border-2 border-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                      From
-                    </p>
-                    <p className="font-semibold truncate text-sm">{r.origin}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1.5">
-                      To
-                    </p>
-                    <p className="font-semibold truncate text-sm">
-                      {r.destination}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-2xl font-display font-black text-primary">
-                      &#8377;{r.price}
-                    </p>
-                    <p className="text-xs text-muted-foreground">per seat</p>
-                  </div>
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-black mb-3"
+                  style={{ background: "#00AEEF", color: "#fff" }}
+                >
+                  {item.step}
                 </div>
-                <p className="text-xs text-muted-foreground mb-3">
-                  {r.date} &middot; {r.time} &middot; {r.seats} seats
-                </p>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">{r.driver}</p>
-                    <p className="text-xs text-muted-foreground">
-                      &#11088; {r.rating} &middot; {r.trips} trips
-                    </p>
-                  </div>
-                </div>
+                <h3 className="font-display font-bold text-sm mb-1">
+                  {item.title}
+                </h3>
+                <p className="text-xs text-muted-foreground">{item.desc}</p>
               </motion.div>
             ))}
           </div>
