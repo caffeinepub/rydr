@@ -30,10 +30,8 @@ export function useActor() {
       await actor._initializeAccessControlWithSecret(adminToken);
       return actor;
     },
-    // Only refetch when identity changes
     staleTime: Number.POSITIVE_INFINITY,
     enabled: true,
-    retry: 1,
   });
 
   // When the actor changes, invalidate dependent queries

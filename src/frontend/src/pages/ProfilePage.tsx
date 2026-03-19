@@ -177,7 +177,9 @@ const SETTINGS_ROWS = [
 ];
 
 // flatten to get 1-based index for each row
-const ALL_ROWS = SETTINGS_ROWS.flatMap((g) => g.items);
+const ALL_ROWS = SETTINGS_ROWS.filter((g) => g.group !== "Finance").flatMap(
+  (g) => g.items,
+);
 
 export function ProfilePage() {
   const { identity, login, isLoggingIn, clear, googleUser } =
@@ -314,7 +316,16 @@ export function ProfilePage() {
       setIsEditing(false);
     } catch (err: unknown) {
       console.error("[ProfilePage] handleSave error:", err);
-      toast.error("Unable to update profile. Please try again.");
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("Not connected") || msg.includes("not connected")) {
+        toast.error(
+          "Could not connect to server. Please check your connection.",
+        );
+      } else if (msg.toLowerCase().includes("name")) {
+        toast.error("Please enter your name.");
+      } else {
+        toast.error("Unable to save profile. Please try again.");
+      }
     }
   };
 
@@ -1091,39 +1102,41 @@ export function ProfilePage() {
           {/* ═══════════════════════════ ACCOUNT TAB ═══════════════════════════ */}
           <TabsContent value="account" className="mt-0 space-y-0">
             <div className="rounded-xl border border-border bg-card overflow-hidden divide-y divide-border">
-              {SETTINGS_ROWS.map((group) => (
-                <div key={group.group}>
-                  {/* Group header */}
-                  <div className="px-4 py-2 bg-muted/30">
-                    <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      {group.group}
-                    </p>
-                  </div>
+              {SETTINGS_ROWS.filter((group) => group.group !== "Finance").map(
+                (group) => (
+                  <div key={group.group}>
+                    {/* Group header */}
+                    <div className="px-4 py-2 bg-muted/30">
+                      <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                        {group.group}
+                      </p>
+                    </div>
 
-                  {/* Rows */}
-                  {group.items.map((item) => {
-                    const idx =
-                      ALL_ROWS.findIndex((r) => r.route === item.route) + 1;
-                    return (
-                      <button
-                        key={item.route}
-                        type="button"
-                        className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/50 transition-colors text-left min-h-[48px]"
-                        onClick={() =>
-                          navigate({ to: item.route as "/profile" })
-                        }
-                        data-ocid={`profile.settings.item.${idx}`}
-                      >
-                        <item.Icon className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <span className="flex-1 text-sm font-medium">
-                          {item.label}
-                        </span>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0" />
-                      </button>
-                    );
-                  })}
-                </div>
-              ))}
+                    {/* Rows */}
+                    {group.items.map((item) => {
+                      const idx =
+                        ALL_ROWS.findIndex((r) => r.route === item.route) + 1;
+                      return (
+                        <button
+                          key={item.route}
+                          type="button"
+                          className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/50 transition-colors text-left min-h-[48px]"
+                          onClick={() =>
+                            navigate({ to: item.route as "/profile" })
+                          }
+                          data-ocid={`profile.settings.item.${idx}`}
+                        >
+                          <item.Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <span className="flex-1 text-sm font-medium">
+                            {item.label}
+                          </span>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                ),
+              )}
 
               {/* Log out row */}
               <div>

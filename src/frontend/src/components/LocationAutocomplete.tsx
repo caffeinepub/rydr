@@ -291,12 +291,21 @@ export function LocationAutocomplete({
     inputRef.current?.focus();
   };
 
+  const noResults =
+    isOpen &&
+    !isLoading &&
+    value.trim().length >= 2 &&
+    suggestions.length === 0 &&
+    nearbyResults.length === 0 &&
+    gpsState === "idle";
+
   const showDropdown =
     isOpen &&
     (showCurrentLocation ||
       suggestions.length > 0 ||
       nearbyResults.length > 0 ||
-      gpsState === "detecting");
+      gpsState === "detecting" ||
+      noResults);
 
   return (
     <div
@@ -475,6 +484,15 @@ export function LocationAutocomplete({
                 </button>
               );
             })}
+          {/* No results message */}
+          {noResults && !showCurrentLocation && (
+            <div className="px-4 py-5 text-center text-sm text-muted-foreground">
+              No locations found for{" "}
+              <span className="font-semibold text-foreground">
+                &ldquo;{value}&rdquo;
+              </span>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -170,9 +170,8 @@ export function HomePage() {
       <section
         className="relative py-10 md:py-14"
         style={{
-          background:
-            "linear-gradient(to bottom, oklch(0.10 0.04 240), oklch(0.09 0.03 240))",
-          borderBottom: "1px solid oklch(0.22 0.04 240 / 0.5)",
+          background: "#0A192F",
+          borderBottom: "1px solid rgba(0,174,239,0.2)",
         }}
       >
         <div
@@ -195,10 +194,16 @@ export function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <h1 className="font-display text-3xl md:text-4xl font-black mb-1 leading-tight">
+            <h1
+              className="font-display text-3xl md:text-4xl font-black mb-1 leading-tight"
+              style={{ color: "#ffffff" }}
+            >
               Where are you going?
             </h1>
-            <p className="text-muted-foreground text-sm mb-5">
+            <p
+              className="text-sm mb-5"
+              style={{ color: "rgba(255,255,255,0.75)" }}
+            >
               Find affordable rides across India.
             </p>
           </motion.div>
@@ -209,13 +214,26 @@ export function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.08 }}
-            className="bg-card border border-[#00AEEF]/40 rounded-2xl p-4 shadow-lg"
+            className="rounded-2xl p-4 shadow-xl"
+            style={
+              {
+                background: "#ffffff",
+                border: "1px solid rgba(0,174,239,0.3)",
+                "--background": "1 0 0",
+                "--foreground": "0.18 0.04 240",
+                "--border": "0.88 0.02 240",
+                "--input": "0.88 0.02 240",
+                "--muted-foreground": "0.45 0.03 240",
+                "--ring": "0.55 0.18 220",
+              } as Record<string, string>
+            }
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1">
                 <Label
                   htmlFor="search-origin"
-                  className="text-xs text-muted-foreground uppercase tracking-wider"
+                  className="text-xs uppercase tracking-wider font-semibold"
+                  style={{ color: "#1F2D3D" }}
                 >
                   From
                 </Label>
@@ -232,7 +250,8 @@ export function HomePage() {
               <div className="space-y-1">
                 <Label
                   htmlFor="search-destination"
-                  className="text-xs text-muted-foreground uppercase tracking-wider"
+                  className="text-xs uppercase tracking-wider font-semibold"
+                  style={{ color: "#1F2D3D" }}
                 >
                   To
                 </Label>
@@ -249,7 +268,8 @@ export function HomePage() {
               <div className="space-y-1">
                 <Label
                   htmlFor="search-date"
-                  className="text-xs text-muted-foreground uppercase tracking-wider"
+                  className="text-xs uppercase tracking-wider font-semibold"
+                  style={{ color: "#1F2D3D" }}
                 >
                   Date
                 </Label>
@@ -258,7 +278,12 @@ export function HomePage() {
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full h-11 px-3 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary transition-colors [color-scheme:dark]"
+                  className="w-full h-11 px-3 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:border-primary transition-colors [color-scheme:light]"
+                  style={{
+                    background: "#ffffff",
+                    color: "#1F2D3D",
+                    borderColor: "#d1d5db",
+                  }}
                   data-ocid="search.date_input"
                 />
               </div>

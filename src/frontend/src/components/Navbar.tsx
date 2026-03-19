@@ -12,11 +12,14 @@ import {
   LayoutDashboard,
   LogIn,
   LogOut,
+  Moon,
   PlusCircle,
   Shield,
+  Sun,
   User,
 } from "lucide-react";
 import { useBranding } from "../context/BrandingContext";
+import { useDarkMode } from "../hooks/useDarkMode";
 import { useInternetIdentity } from "../hooks/useGoogleAuth";
 import { useIsAdmin } from "../hooks/useIsAdmin";
 import { useMyProfile } from "../hooks/useQueries";
@@ -27,6 +30,7 @@ export function Navbar() {
   const { data: isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const { branding } = useBranding();
+  const { isDark, toggle } = useDarkMode();
   const isLoggedIn = !!identity;
 
   const initials = profile?.name
@@ -65,6 +69,7 @@ export function Navbar() {
                 fontSize: "1.35rem",
                 letterSpacing: "0.06em",
                 color: "#ffffff",
+                textShadow: "0 1px 4px rgba(0,0,0,0.25)",
               }}
             >
               RYDR
@@ -110,8 +115,24 @@ export function Navbar() {
           )}
         </nav>
 
-        {/* Auth actions */}
+        {/* Auth actions + theme toggle */}
         <div className="flex items-center gap-2">
+          {/* Dark/Light mode toggle */}
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            data-ocid="nav.theme_toggle"
+            className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-white/15 transition-colors"
+            style={{ color: "rgba(255,255,255,0.85)" }}
+          >
+            {isDark ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
+          </button>
+
           {isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
