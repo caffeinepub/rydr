@@ -12,7 +12,6 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import { BottomNav } from "./components/BottomNav";
 import { ChunkErrorBoundary } from "./components/ChunkErrorBoundary";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
 import { OfflineBanner } from "./components/OfflineBanner";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -224,7 +223,7 @@ const LazyHelp = LazySettings(AccountHelpPage);
 const LazyTerms = LazySettings(AccountTermsPage);
 const LazyData = LazySettings(AccountDataPage);
 
-// ── Root layout (with Navbar + Footer) ────────────────────────
+// ── Root layout ────────────────────────────────────────────
 function RootLayout() {
   const { identity } = useInternetIdentity();
   const { data: profile, isLoading: profileLoading } = useMyProfile();
@@ -242,10 +241,9 @@ function RootLayout() {
       <OfflineBanner />
       <Navbar />
       {/* On mobile, bottom nav takes 64px — add padding so content isn't hidden behind it */}
-      <div className="flex-1 md:pb-0 pb-16">
+      <div className="flex-1 pb-20 md:pb-4">
         <Outlet />
       </div>
-      <Footer />
       <BottomNav />
       <RegisterModal
         open={showRegister}

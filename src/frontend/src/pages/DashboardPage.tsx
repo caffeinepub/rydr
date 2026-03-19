@@ -154,7 +154,7 @@ export function DashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
           <div>
             <h1 className="font-display text-3xl font-black">Dashboard</h1>
             <p className="text-muted-foreground">

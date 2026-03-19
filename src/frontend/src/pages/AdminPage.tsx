@@ -755,101 +755,105 @@ function UsersTab() {
 
       <Card className="border-border/50 bg-card/70">
         <CardContent className="p-0">
-          <Table data-ocid="admin.users.table">
-            <TableHeader>
-              <TableRow className="border-border/50 hover:bg-transparent">
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Name
-                </TableHead>
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Email
-                </TableHead>
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider text-center">
-                  Taken
-                </TableHead>
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider text-center">
-                  Posted
-                </TableHead>
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Status
-                </TableHead>
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center text-muted-foreground py-10"
-                    data-ocid="admin.users.empty_state"
+          <div className="overflow-x-auto">
+            <Table data-ocid="admin.users.table">
+              <TableHeader>
+                <TableRow className="border-border/50 hover:bg-transparent">
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Name
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Email
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider text-center">
+                    Taken
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider text-center">
+                    Posted
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Status
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="text-center text-muted-foreground py-10"
+                      data-ocid="admin.users.empty_state"
+                    >
+                      No users found matching your search.
+                    </TableCell>
+                  </TableRow>
+                )}
+                {filtered.map((user, idx) => (
+                  <TableRow
+                    key={user.id}
+                    className="border-border/30 hover:bg-muted/20"
+                    data-ocid={`admin.users.row.${idx + 1}`}
                   >
-                    No users found matching your search.
-                  </TableCell>
-                </TableRow>
-              )}
-              {filtered.map((user, idx) => (
-                <TableRow
-                  key={user.id}
-                  className="border-border/30 hover:bg-muted/20"
-                  data-ocid={`admin.users.row.${idx + 1}`}
-                >
-                  <TableCell className="font-medium text-sm">
-                    {user.name}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {user.email}
-                  </TableCell>
-                  <TableCell className="text-center text-sm">
-                    {user.ridesTaken}
-                  </TableCell>
-                  <TableCell className="text-center text-sm">
-                    {user.ridesPosted}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={user.status} />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1.5 flex-wrap">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/10"
-                        onClick={() =>
-                          toast.warning(`User ${user.name} warned`)
-                        }
-                        data-ocid={`admin.users.warn.button.${idx + 1}`}
-                      >
-                        Warn
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs border-orange-500/40 text-orange-400 hover:bg-orange-500/10"
-                        onClick={() =>
-                          toast.info(`User ${user.name} suspended`)
-                        }
-                        data-ocid={`admin.users.suspend.button.${idx + 1}`}
-                      >
-                        Suspend
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs border-red-500/40 text-red-400 hover:bg-red-500/10"
-                        onClick={() => toast.error(`User ${user.name} banned`)}
-                        data-ocid={`admin.users.delete_button.${idx + 1}`}
-                      >
-                        Ban
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    <TableCell className="font-medium text-sm">
+                      {user.name}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {user.email}
+                    </TableCell>
+                    <TableCell className="text-center text-sm">
+                      {user.ridesTaken}
+                    </TableCell>
+                    <TableCell className="text-center text-sm">
+                      {user.ridesPosted}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={user.status} />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1.5 flex-wrap">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/10"
+                          onClick={() =>
+                            toast.warning(`User ${user.name} warned`)
+                          }
+                          data-ocid={`admin.users.warn.button.${idx + 1}`}
+                        >
+                          Warn
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs border-orange-500/40 text-orange-400 hover:bg-orange-500/10"
+                          onClick={() =>
+                            toast.info(`User ${user.name} suspended`)
+                          }
+                          data-ocid={`admin.users.suspend.button.${idx + 1}`}
+                        >
+                          Suspend
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs border-red-500/40 text-red-400 hover:bg-red-500/10"
+                          onClick={() =>
+                            toast.error(`User ${user.name} banned`)
+                          }
+                          data-ocid={`admin.users.delete_button.${idx + 1}`}
+                        >
+                          Ban
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -893,75 +897,79 @@ function RidesTab() {
 
       <Card className="border-border/50 bg-card/70">
         <CardContent className="p-0">
-          <Table data-ocid="admin.rides.table">
-            <TableHeader>
-              <TableRow className="border-border/50 hover:bg-transparent">
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Route
-                </TableHead>
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Driver
-                </TableHead>
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Date
-                </TableHead>
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider text-center">
-                  Seats
-                </TableHead>
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Status
-                </TableHead>
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Price
-                </TableHead>
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Action
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((ride, idx) => (
-                <TableRow
-                  key={ride.id}
-                  className="border-border/30 hover:bg-muted/20"
-                  data-ocid={`admin.rides.row.${idx + 1}`}
-                >
-                  <TableCell className="font-medium text-sm">
-                    <div className="flex items-center gap-1.5">
-                      <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
-                      {ride.route}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {ride.driver}
-                  </TableCell>
-                  <TableCell className="text-sm">{ride.date}</TableCell>
-                  <TableCell className="text-center text-sm">
-                    {ride.seats}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={ride.status} />
-                  </TableCell>
-                  <TableCell className="text-sm font-medium text-primary">
-                    {ride.price}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs border-red-500/40 text-red-400 hover:bg-red-500/10"
-                      onClick={() => toast.error(`Ride #${ride.id} cancelled`)}
-                      disabled={ride.status !== "active"}
-                      data-ocid={`admin.rides.cancel.button.${idx + 1}`}
-                    >
-                      <CircleX className="h-3.5 w-3.5 mr-1" />
-                      Cancel
-                    </Button>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table data-ocid="admin.rides.table">
+              <TableHeader>
+                <TableRow className="border-border/50 hover:bg-transparent">
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Route
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Driver
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Date
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider text-center">
+                    Seats
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Status
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Price
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Action
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((ride, idx) => (
+                  <TableRow
+                    key={ride.id}
+                    className="border-border/30 hover:bg-muted/20"
+                    data-ocid={`admin.rides.row.${idx + 1}`}
+                  >
+                    <TableCell className="font-medium text-sm">
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                        {ride.route}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {ride.driver}
+                    </TableCell>
+                    <TableCell className="text-sm">{ride.date}</TableCell>
+                    <TableCell className="text-center text-sm">
+                      {ride.seats}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={ride.status} />
+                    </TableCell>
+                    <TableCell className="text-sm font-medium text-primary">
+                      {ride.price}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs border-red-500/40 text-red-400 hover:bg-red-500/10"
+                        onClick={() =>
+                          toast.error(`Ride #${ride.id} cancelled`)
+                        }
+                        disabled={ride.status !== "active"}
+                        data-ocid={`admin.rides.cancel.button.${idx + 1}`}
+                      >
+                        <CircleX className="h-3.5 w-3.5 mr-1" />
+                        Cancel
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -1163,71 +1171,73 @@ function FraudTab() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <Table data-ocid="admin.fraud.table">
-            <TableHeader>
-              <TableRow className="border-border/50 hover:bg-transparent">
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Name
-                </TableHead>
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Risk Level
-                </TableHead>
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Reason
-                </TableHead>
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Last Activity
-                </TableHead>
-                <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {MOCK_FRAUD.map((entry, idx) => (
-                <TableRow
-                  key={entry.id}
-                  className="border-border/30 hover:bg-muted/20"
-                  data-ocid={`admin.fraud.row.${idx + 1}`}
-                >
-                  <TableCell className="font-medium text-sm">
-                    {entry.name}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={entry.risk} />
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {entry.reason}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {entry.lastActivity}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1.5">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs"
-                        onClick={() => toast.info("Reviewing account")}
-                        data-ocid={`admin.fraud.review.button.${idx + 1}`}
-                      >
-                        Review
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs border-green-500/40 text-green-400 hover:bg-green-500/10"
-                        onClick={() => toast.success("Account cleared")}
-                        data-ocid={`admin.fraud.clear.button.${idx + 1}`}
-                      >
-                        Clear
-                      </Button>
-                    </div>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table data-ocid="admin.fraud.table">
+              <TableHeader>
+                <TableRow className="border-border/50 hover:bg-transparent">
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Name
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Risk Level
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Reason
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Last Activity
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Actions
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {MOCK_FRAUD.map((entry, idx) => (
+                  <TableRow
+                    key={entry.id}
+                    className="border-border/30 hover:bg-muted/20"
+                    data-ocid={`admin.fraud.row.${idx + 1}`}
+                  >
+                    <TableCell className="font-medium text-sm">
+                      {entry.name}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={entry.risk} />
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {entry.reason}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {entry.lastActivity}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1.5">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          onClick={() => toast.info("Reviewing account")}
+                          data-ocid={`admin.fraud.review.button.${idx + 1}`}
+                        >
+                          Review
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs border-green-500/40 text-green-400 hover:bg-green-500/10"
+                          onClick={() => toast.success("Account cleared")}
+                          data-ocid={`admin.fraud.clear.button.${idx + 1}`}
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -1837,92 +1847,96 @@ function RatingsTab() {
         className="bg-card border border-border rounded-xl overflow-hidden"
         data-ocid="admin.ratings.table"
       >
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
-                Reviewer
-              </TableHead>
-              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
-                Target
-              </TableHead>
-              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
-                Type
-              </TableHead>
-              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
-                Rating
-              </TableHead>
-              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
-                Comment
-              </TableHead>
-              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
-                Date
-              </TableHead>
-              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
-                Actions
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {ratings.map((r, idx) => (
-              <TableRow
-                key={r.id}
-                className={r.flagged ? "bg-destructive/5" : undefined}
-              >
-                <TableCell className="font-medium text-sm">
-                  {r.reviewer}
-                </TableCell>
-                <TableCell className="text-sm">{r.target}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant="outline"
-                    className={
-                      r.targetType === "driver"
-                        ? "border-primary/40 text-primary bg-primary/10 text-xs"
-                        : "border-muted text-muted-foreground text-xs"
-                    }
-                  >
-                    {r.targetType === "driver" ? "Driver" : "Passenger"}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-0.5">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star
-                        key={s}
-                        className="h-3.5 w-3.5"
-                        fill={s <= r.rating ? "#f59e0b" : "none"}
-                        stroke={s <= r.rating ? "#f59e0b" : "currentColor"}
-                        strokeWidth={1.5}
-                      />
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">
-                  {r.comment}
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {r.date}
-                </TableCell>
-                <TableCell>
-                  {r.flagged && (
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      className="h-7 text-xs gap-1"
-                      onClick={() =>
-                        setRatings((prev) => prev.filter((x) => x.id !== r.id))
-                      }
-                      data-ocid={`admin.ratings.remove.button.${idx + 1}`}
-                    >
-                      Remove
-                    </Button>
-                  )}
-                </TableCell>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Reviewer
+                </TableHead>
+                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Target
+                </TableHead>
+                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Type
+                </TableHead>
+                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Rating
+                </TableHead>
+                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Comment
+                </TableHead>
+                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Date
+                </TableHead>
+                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Actions
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {ratings.map((r, idx) => (
+                <TableRow
+                  key={r.id}
+                  className={r.flagged ? "bg-destructive/5" : undefined}
+                >
+                  <TableCell className="font-medium text-sm">
+                    {r.reviewer}
+                  </TableCell>
+                  <TableCell className="text-sm">{r.target}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={
+                        r.targetType === "driver"
+                          ? "border-primary/40 text-primary bg-primary/10 text-xs"
+                          : "border-muted text-muted-foreground text-xs"
+                      }
+                    >
+                      {r.targetType === "driver" ? "Driver" : "Passenger"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          className="h-3.5 w-3.5"
+                          fill={s <= r.rating ? "#f59e0b" : "none"}
+                          stroke={s <= r.rating ? "#f59e0b" : "currentColor"}
+                          strokeWidth={1.5}
+                        />
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">
+                    {r.comment}
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {r.date}
+                  </TableCell>
+                  <TableCell>
+                    {r.flagged && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="h-7 text-xs gap-1"
+                        onClick={() =>
+                          setRatings((prev) =>
+                            prev.filter((x) => x.id !== r.id),
+                          )
+                        }
+                        data-ocid={`admin.ratings.remove.button.${idx + 1}`}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );
@@ -2120,11 +2134,17 @@ export function AdminPage() {
         {/* Logo */}
         <div className="px-5 py-5 border-b border-border/30">
           <div className="flex items-center gap-2.5">
-            <img
-              src="/assets/uploads/file_00000000650c720883073dd037e87b31-1.png"
-              alt="RYDR"
-              className="h-8 w-auto"
-            />
+            <span
+              style={{
+                fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
+                fontWeight: 800,
+                fontSize: "1.25rem",
+                letterSpacing: "0.05em",
+                color: "oklch(var(--primary))",
+              }}
+            >
+              RYDR
+            </span>
             <div>
               <p className="text-xs font-semibold text-foreground leading-none">
                 Admin Panel

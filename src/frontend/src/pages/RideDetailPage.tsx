@@ -143,7 +143,7 @@ export function RideDetailPage() {
 
         {/* Route header */}
         <div className="bg-card border border-border rounded-xl p-6 mb-6">
-          <div className="flex items-start justify-between mb-6">
+          <div className="flex items-start justify-between gap-2 mb-6">
             <div className="flex items-start gap-4">
               <div className="flex flex-col items-center gap-1 mt-1">
                 <div className="w-3 h-3 rounded-full bg-primary" />
@@ -170,7 +170,7 @@ export function RideDetailPage() {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-4xl font-display font-black text-primary">
+              <p className="text-2xl sm:text-4xl font-display font-black text-primary">
                 ₹{Number(ride.pricePerSeat)}
               </p>
               <p className="text-sm text-muted-foreground">per seat</p>

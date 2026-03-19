@@ -486,7 +486,7 @@ export function ChatPage() {
     >
       {activeConversation ? (
         /* Thread view */
-        <div className="flex flex-col flex-1 h-screen">
+        <div className="flex flex-col flex-1 h-[calc(100vh-60px)] md:h-screen">
           <MessageThread
             conversation={activeConversation}
             onBack={() => setActiveConversation(null)}
