@@ -1,50 +1,44 @@
-# RYDR
+# RYDR – Full System Repair + Feature Completion
 
 ## Current State
-- App is a carpooling platform with backend (Motoko) + React frontend
-- Authentication: Google OAuth via `useGoogleAuth.ts` — but `main.tsx` keeps importing `InternetIdentityProvider` from the real ICP file (`useInternetIdentity.ts`), causing every backend call to run as anonymous and be rejected
-- `useActor.ts` also imports `useInternetIdentity` from the ICP file, so identity is always null for Google users
-- Profile save fails with "Unable to update profile" because actor has no identity
-- Ride publishing fails for the same reason
-- Logo not displaying — `BrandingContext` logoUrl defaults to empty string, no fallback SVG logo shown
-- Dark/light mode toggle: `useDarkMode` hook exists, toggle needs wiring in Navbar
-- Location search: `LocationAutocomplete` uses OpenStreetMap/Nominatim but may have issues
-- Some UI visibility issues (low contrast), no consistent dark mode CSS
-- Payment screens need to be hidden (future ready only)
-- Footer (except bottom nav) should remain removed
+- `main.tsx` still imports `InternetIdentityProvider` from `./hooks/useInternetIdentity` (the REAL ICP AuthClient file), which throws "InternetIdentityProvider is not present" on every load
+- `useActor.ts` also imports `useInternetIdentity` from the ICP file, meaning every backend call uses a null anonymous identity and is rejected
+- `useInternetIdentity.ts` is the real ICP implementation — causes the runtime error
+- `AuthProviders` component exists and is correct (wraps `GoogleAuthProvider`) but is NOT used in `main.tsx`
+- `useGoogleAuth.ts` is correct and ready but NOT used in `useActor.ts`
+- Admin panel exists (AdminPage.tsx, ~2239 lines) but has no Google OAuth Client ID input or Razorpay API key console
+- Live GPS tracking not implemented
+- Only driver rating exists (`rateDriver`); no passenger-rates-driver-after-ride flow shown in UI clearly
+- Notification system exists (useNotificationStore) but not wired to booking/ride events
 
 ## Requested Changes (Diff)
 
 ### Add
-- Fallback RYDR text logo when no logoUrl is configured
-- Dark/light mode toggle button in Navbar and BottomNav
-- Save dark mode preference to localStorage
-- Better error messages (network vs validation vs backend)
-- Logo asset (generated SVG) for RYDR brand
+- Admin → Settings tab: Google OAuth Client ID input field with save/status indicator
+- Admin → Settings tab: Razorpay Key ID + Key Secret fields with sandbox toggle
+- Live tracking page `/ride/:id/tracking` — driver side: start tracking button uses browser Geolocation API to store coords in localStorage every 5s; passenger side: polls localStorage/backend every 5s to show driver on Leaflet map with ETA
+- Razorpay payment modal wired when Razorpay keys are configured
+- Notification triggers for: booking request sent, booking accepted/rejected, ride reminder
 
 ### Modify
-- **CRITICAL**: Replace `useInternetIdentity.ts` with a pure stub re-exporting everything from `useGoogleAuth.ts` — permanent fix so any import from this file uses Google auth
-- **CRITICAL**: Fix `main.tsx` to use `<AuthProviders>` wrapper, remove ICP import
-- **CRITICAL**: Fix `useActor.ts` to import `useGoogleAuth` not `useInternetIdentity`
-- Profile page: ensure handleSave catches errors gracefully, shows field-specific messages
-- Ride publish: ensure actor is authenticated before allowing publish
-- Navbar: show RYDR logo fallback text, wire dark mode toggle
-- Hide payment/payout/refund screens (mark as coming soon)
-- Improve UI contrast on search panel (navy background #0A192F with white text)
-- LocationAutocomplete: ensure it handles empty results gracefully
+- `main.tsx`: replace `InternetIdentityProvider` import+usage with `AuthProviders`
+- `useActor.ts`: replace `useInternetIdentity` import with `useGoogleAuth`
+- `useInternetIdentity.ts`: replace entire file contents with a permanent stub that re-exports everything from `useGoogleAuth`
+- `GoogleAuthProvider.tsx`: wire up real Google GSI when Client ID is stored in localStorage/branding config
+- Admin page: add Settings tab with Google OAuth + Razorpay consoles
+- DashboardPage: show "Rate your driver" button for completed rides where rating hasn't been given
+- RideDetailPage: add "Track Ride" button for accepted bookings
+- Notifications: trigger notification events on bookRide, approveBooking, rejectBooking mutations
 
 ### Remove
-- All real ICP/DFINITY imports from `useInternetIdentity.ts` — replace with stub
-- Payment screens from navigation (hide until integration complete)
+- All direct `@dfinity/auth-client` usage in `useInternetIdentity.ts` (replaced by stub)
 
 ## Implementation Plan
-1. Rewrite `useInternetIdentity.ts` as a pure re-export stub from `useGoogleAuth.ts`
-2. Fix `main.tsx` — use `<AuthProviders>` as the sole auth wrapper
-3. Fix `useActor.ts` — import from `useGoogleAuth` not `useInternetIdentity`
-4. Fix `ProfilePage.tsx` error handling — catch errors with field-specific messages
-5. Fix `PostRidePage.tsx` — show auth gate if not logged in, improve error messages
-6. Fix `Navbar.tsx` — RYDR logo fallback, dark mode toggle
-7. Fix `BottomNav.tsx` — dark mode toggle, theme consistency
-8. Fix `index.css` — dark mode CSS variables for navy/white theme
-9. Hide payment-related settings pages from navigation (AccountPaymentMethodsPage, etc.)
-10. Fix location search contrast issues in search panel
+1. Fix `main.tsx` — use `<AuthProviders>` wrapper
+2. Fix `useActor.ts` — import `useGoogleAuth` instead of `useInternetIdentity`
+3. Stub `useInternetIdentity.ts` — re-export from `useGoogleAuth` so any platform-injected import still resolves to Google auth
+4. Add Settings tab to AdminPage with Google OAuth Client ID + Razorpay key inputs
+5. Update `GoogleAuthProvider.tsx` to read stored Client ID and use real Google GSI popup
+6. Add `/ride/:id/tracking` route and TrackingPage component
+7. Wire notification events into useQueries mutations
+8. Add ride completion rating modal for passengers

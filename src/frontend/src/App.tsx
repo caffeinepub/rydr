@@ -44,6 +44,9 @@ const AdminPage = lazy(() =>
 const ChatPage = lazy(() =>
   import("./pages/ChatPage").then((m) => ({ default: m.ChatPage })),
 );
+const TrackingPage = lazy(() =>
+  import("./pages/TrackingPage").then((m) => ({ default: m.TrackingPage })),
+);
 const UserProfileViewPage = lazy(() =>
   import("./pages/UserProfileViewPage").then((m) => ({
     default: m.UserProfileViewPage,
@@ -346,6 +349,17 @@ const profileRoute = createRoute({
   component: LazyProfile,
 });
 
+const trackingRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: "/tracking/$rideId",
+  component: () => (
+    <Suspense fallback={<PageFallback />}>
+      <ChunkErrorBoundary>
+        <TrackingPage />
+      </ChunkErrorBoundary>
+    </Suspense>
+  ),
+});
 const chatRoute = createRoute({
   getParentRoute: () => protectedLayoutRoute,
   path: "/chat",
@@ -436,6 +450,7 @@ const routeTree = rootRoute.addChildren([
       dashboardRoute,
       profileRoute,
       chatRoute,
+      trackingRoute,
       // Settings sub-routes
       profileRatingsRoute,
       profileSavedPassengersRoute,

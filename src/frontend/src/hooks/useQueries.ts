@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ApprovalMode, Booking, Ride, UserPublic } from "../types";
 import { useActor } from "./useActor";
+import { useNotificationStore } from "./useNotificationStore";
 
 // ── User queries ──────────────────────────────────────────────
 
@@ -349,6 +350,7 @@ export function useBookingRequestsForDriver() {
 export function useBookRide() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
+  const notifStore = useNotificationStore();
   return useMutation({
     mutationFn: async (rideId: bigint) => {
       if (!actor) throw new Error("Not connected");
@@ -365,9 +367,10 @@ export function useBookRide() {
       }
       return result.ok as Booking;
     },
-    onSuccess: () => {
+    onSuccess: (_data, _rideId) => {
       queryClient.invalidateQueries({ queryKey: ["myBookings"] });
       queryClient.invalidateQueries({ queryKey: ["rideDetail"] });
+      notifStore.increment();
     },
     onError: (err) => {
       console.error("[useBookRide] mutation error:", err);
@@ -378,6 +381,7 @@ export function useBookRide() {
 export function useApproveBooking() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
+  const notifStore = useNotificationStore();
   return useMutation({
     mutationFn: async (bookingId: bigint) => {
       if (!actor) throw new Error("Not connected");
@@ -396,6 +400,7 @@ export function useApproveBooking() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookingRequests"] });
+      notifStore.increment();
     },
     onError: (err) => {
       console.error("[useApproveBooking] mutation error:", err);
@@ -406,6 +411,7 @@ export function useApproveBooking() {
 export function useRejectBooking() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
+  const notifStore = useNotificationStore();
   return useMutation({
     mutationFn: async (bookingId: bigint) => {
       if (!actor) throw new Error("Not connected");
@@ -424,6 +430,7 @@ export function useRejectBooking() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookingRequests"] });
+      notifStore.increment();
     },
     onError: (err) => {
       console.error("[useRejectBooking] mutation error:", err);

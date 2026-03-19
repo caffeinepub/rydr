@@ -1,0 +1,345 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Self-hosted Fonts ──────────────────────────────────────── */
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("/assets/fonts/PlusJakartaSans-Variable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Outfit";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/assets/fonts/Outfit-Variable.woff2") format("woff2");
+}
+
+/* ─── Design Tokens ─────────────────────────────────────────── */
+@layer base {
+  /* ── Dark mode (default — navy/sky/white) ────────────────── */
+  :root {
+    color-scheme: dark;
+    --radius: 0.5rem;
+
+    /* RYDR brand tokens */
+    --rydr-primary: #00aeef;
+    --rydr-secondary: #0b3d91;
+
+    /* Transition tokens */
+    --transition-fast: 150ms ease;
+    --transition-base: 200ms ease;
+
+    /* shadcn/ui OKLCH palette — RYDR Dark theme */
+    --background: 0.1 0.04 242; /* #0A192F dark navy */
+    --foreground: 0.96 0.01 240; /* near-white */
+
+    --card: 0.15 0.04 240; /* slightly lighter navy */
+    --card-foreground: 0.96 0.01 240;
+
+    --popover: 0.13 0.04 240;
+    --popover-foreground: 0.96 0.01 240;
+
+    /* Primary: Sky Blue (#00AEEF) */
+    --primary: 0.69 0.15 220;
+    --primary-foreground: 1 0 0;
+
+    /* Secondary: Deep Navy (#0B3D91) */
+    --secondary: 0.28 0.12 245;
+    --secondary-foreground: 1 0 0;
+
+    --muted: 0.2 0.03 240;
+    --muted-foreground: 0.65 0.02 240;
+
+    --accent: 0.22 0.05 220;
+    --accent-foreground: 0.96 0 0;
+
+    --destructive: 0.55 0.22 25;
+    --destructive-foreground: 1 0 0;
+
+    --border: 0.25 0.04 240;
+    --input: 0.25 0.04 240;
+    --ring: 0.69 0.15 220;
+
+    --chart-1: 0.69 0.15 220;
+    --chart-2: 0.72 0.15 195;
+    --chart-3: 0.65 0.18 160;
+    --chart-4: 0.6 0.14 210;
+    --chart-5: 0.72 0.22 145;
+
+    --sidebar: 0.12 0.04 242;
+    --sidebar-foreground: 0.96 0.01 240;
+    --sidebar-primary: 0.69 0.15 220;
+    --sidebar-primary-foreground: 1 0 0;
+    --sidebar-accent: 0.18 0.04 240;
+    --sidebar-accent-foreground: 0.96 0.01 240;
+    --sidebar-border: 0.25 0.04 240;
+    --sidebar-ring: 0.69 0.15 220;
+  }
+
+  /* ── Light mode (adds .light class on <html>) ──────────────── */
+  .light {
+    color-scheme: light;
+    --background: 0.97 0.005 240; /* #F6F7F9 */
+    --foreground: 0.18 0.04 240; /* #1F2D3D */
+
+    --card: 1 0 0; /* white */
+    --card-foreground: 0.18 0.04 240;
+
+    --popover: 1 0 0;
+    --popover-foreground: 0.18 0.04 240;
+
+    --primary: 0.55 0.18 220;
+    --primary-foreground: 1 0 0;
+
+    --secondary: 0.94 0.02 240;
+    --secondary-foreground: 0.18 0.04 240;
+
+    --muted: 0.94 0.02 240;
+    --muted-foreground: 0.45 0.03 240;
+
+    --accent: 0.92 0.04 220;
+    --accent-foreground: 0.18 0 0;
+
+    --destructive: 0.55 0.22 25;
+    --destructive-foreground: 1 0 0;
+
+    --border: 0.88 0.02 240;
+    --input: 0.88 0.02 240;
+    --ring: 0.55 0.18 220;
+
+    --sidebar: 0.95 0.01 240;
+    --sidebar-foreground: 0.18 0.04 240;
+    --sidebar-border: 0.88 0.02 240;
+    --sidebar-ring: 0.55 0.18 220;
+    --sidebar-primary: 0.55 0.18 220;
+    --sidebar-primary-foreground: 1 0 0;
+    --sidebar-accent: 0.94 0.02 240;
+    --sidebar-accent-foreground: 0.18 0.04 240;
+  }
+
+  * {
+    @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+    transition-property: color, background-color, border-color, opacity;
+    transition-duration: 150ms;
+    transition-timing-function: ease;
+  }
+
+  body {
+    overflow-x: hidden;
+    background-color: oklch(var(--background));
+    color: oklch(var(--foreground));
+    @apply bg-background text-foreground;
+    font-family: "Plus Jakarta Sans", "Outfit", system-ui, sans-serif;
+    font-weight: 500;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Plus Jakarta Sans", "Outfit", system-ui, sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* ─── Map styles ─────────────────────────────────────────────── */
+.leaflet-container {
+  border-radius: var(--radius);
+  z-index: 0;
+}
+
+.leaflet-tile-pane {
+  filter: brightness(0.95) saturate(0.9);
+}
+
+/* ─── Custom scrollbar ───────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.69 0.15 220 / 0.4);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.69 0.15 220 / 0.7);
+}
+
+/* ─── Theme-aware card classes ────────────────────────────────── */
+.theme-card {
+  border: 1.5px solid var(--rydr-primary, #00aeef);
+  border-radius: var(--radius);
+}
+
+.theme-card-bg {
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklch, var(--rydr-primary, #00aeef) 5%, transparent),
+    transparent
+  );
+}
+
+/* ─── Utility classes ─────────────────────────────────────────── */
+.glow-primary {
+  box-shadow: 0 0 20px oklch(0.69 0.15 220 / 0.4);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #00aeef, #0b3d91);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-brand {
+  background: linear-gradient(135deg, #00aeef, #0b3d91);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.bg-gradient-brand {
+  background: linear-gradient(135deg, #00aeef, #0b3d91);
+}
+
+.shadow-glow-brand {
+  box-shadow: 0 0 30px oklch(0.69 0.15 220 / 0.3), 0 0 60px
+    oklch(0.72 0.15 195 / 0.15);
+}
+
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 174, 239, 0.15);
+  border-color: rgba(0, 174, 239, 0.5);
+}
+
+.btn-glow {
+  box-shadow: 0 0 20px oklch(0.69 0.15 220 / 0.4);
+  transition: box-shadow 0.2s ease;
+}
+.btn-glow:hover {
+  box-shadow: 0 0 30px oklch(0.69 0.15 220 / 0.6);
+}
+
+/* ─── Welcome page animations ────────────────────────────────── */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes particle-drift {
+  0% {
+    transform: translateY(0px) translateX(0px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-120px) translateX(30px);
+    opacity: 0;
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 20px oklch(0.69 0.15 220 / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 35px oklch(0.69 0.15 220 / 0.7);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Bottom Navigation — Flat 5-tab style (BlaBlaCar / Uber)
+═══════════════════════════════════════════════════════════════ */
+
+/* Legacy classes kept for any residual references */
+.nav-icon-active {
+  color: #00aeef;
+}
+.nav-icon-inactive {
+  color: #9ca3af;
+}
+.nav-label-active {
+  color: #00aeef;
+  font-weight: 700;
+}
+.nav-label-inactive {
+  color: #9ca3af;
+}
+
+.chat-badge {
+  position: absolute;
+  top: -5px;
+  right: -7px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #ffffff;
+  pointer-events: none;
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

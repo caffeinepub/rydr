@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { MapPin as TrackIcon } from "lucide-react";
 import {
   AlertCircle,
   ArrowLeft,
@@ -73,7 +74,51 @@ export function RideDetailPage() {
       setShowDuplicateDialog(true);
       return;
     }
-    if (!rideIdBigInt) return;
+    if (!rideIdBigInt || !ride) return;
+
+    const razorpayKeyId = localStorage.getItem("rydr_razorpay_key_id");
+    if (razorpayKeyId) {
+      // Load Razorpay script and open modal
+      const loadScript = (): Promise<boolean> =>
+        new Promise((resolve) => {
+          if ((window as any).Razorpay) {
+            resolve(true);
+            return;
+          }
+          const s = document.createElement("script");
+          s.src = "https://checkout.razorpay.com/v1/checkout.js";
+          s.onload = () => resolve(true);
+          s.onerror = () => resolve(false);
+          document.head.appendChild(s);
+        });
+      const loaded = await loadScript();
+      if (!loaded) {
+        toast.error("Payment gateway failed to load. Please try again.");
+        return;
+      }
+      const options = {
+        key: razorpayKeyId,
+        amount: Number(ride.pricePerSeat) * 100,
+        currency: "INR",
+        name: "RYDR",
+        description: `${ride.origin} → ${ride.destination}`,
+        handler: async () => {
+          try {
+            await bookRide(rideIdBigInt);
+            toast.success("Payment successful! Ride booked.");
+          } catch (err: any) {
+            toast.error(err?.message || "Booking failed after payment");
+          }
+        },
+        prefill: { name: identity?.getPrincipal()?.toString() ?? "" },
+        modal: { ondismiss: () => toast("Payment cancelled") },
+      };
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+      return;
+    }
+
+    // No Razorpay — direct booking
     try {
       await bookRide(rideIdBigInt);
       toast.success("Ride booked successfully!");
@@ -362,6 +407,22 @@ export function RideDetailPage() {
                   </p>
                 </div>
               </div>
+              {isBookingConfirmed(myBookingForRide.status) && (
+                <div className="mt-3">
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    data-ocid="ride.track_button"
+                  >
+                    <Link to="/tracking/$rideId" params={{ rideId: rideId }}>
+                      <TrackIcon className="h-4 w-4" />
+                      Track Ride
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </div>
           ) : isActive && seatsAvailable > 0 ? (
             <div className="flex items-center justify-between gap-4">

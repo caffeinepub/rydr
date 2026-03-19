@@ -1,11 +1,12 @@
 /**
- * STUB: This file now re-exports everything from useGoogleAuth.ts.
+ * PERMANENT STUB – DO NOT MODIFY
  *
- * This ensures that any import from this file (including the platform's
- * auto-injected InternetIdentityProvider in main.tsx) actually uses the
- * Google OAuth system, not ICP Internet Identity.
+ * This file previously contained ICP Internet Identity logic.
+ * RYDR now uses Google OAuth exclusively.
  *
- * DO NOT add real ICP imports here.
+ * All exports are re-routed to useGoogleAuth so any import of
+ * useInternetIdentity (including platform-injected ones) resolves
+ * to Google auth and never throws the ICP runtime error.
  */
 export * from "./useGoogleAuth";
 export { GoogleAuthProvider as InternetIdentityProvider } from "./useGoogleAuth";

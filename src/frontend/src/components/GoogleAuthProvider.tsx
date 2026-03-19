@@ -398,7 +398,10 @@ export function GoogleAuthProvider({
   const envClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as
     | string
     | undefined;
-  const localClientId = localStorage.getItem("RYDR_GOOGLE_CLIENT_ID") ?? "";
+  const localClientId =
+    localStorage.getItem("rydr_google_client_id") ||
+    localStorage.getItem("RYDR_GOOGLE_CLIENT_ID") ||
+    "";
   const clientId = localClientId.trim() || envClientId;
   const hasRealOAuth = !!(
     clientId?.trim() && clientId !== "YOUR_GOOGLE_CLIENT_ID"

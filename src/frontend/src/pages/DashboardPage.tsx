@@ -269,6 +269,36 @@ export function DashboardPage() {
               />
             ) : (
               <div className="space-y-3">
+                {/* Rate your driver banners for confirmed, unrated bookings */}
+                {myBookings
+                  .filter(
+                    (b) =>
+                      isBookingConfirmed(b.status) &&
+                      b.ratingGiven.length === 0,
+                  )
+                  .map((b) => (
+                    <div
+                      key={`rate-banner-${b.id.toString()}`}
+                      className="flex items-center justify-between gap-3 p-3 rounded-lg bg-yellow-50 border border-yellow-200"
+                      data-ocid="dashboard.rate_banner"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Star className="h-4 w-4 text-yellow-600 shrink-0" />
+                        <p className="text-sm font-medium text-yellow-800">
+                          Rate your driver for ride #{b.rideId.toString()}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="shrink-0 border-yellow-300 text-yellow-700 hover:bg-yellow-100"
+                        onClick={() => openRatingModal(b.id)}
+                        data-ocid="dashboard.rate_banner_button"
+                      >
+                        Rate Now
+                      </Button>
+                    </div>
+                  ))}
                 {myBookings.map((booking, i) => (
                   <BookingRow
                     key={booking.id.toString()}
