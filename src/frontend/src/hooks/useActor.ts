@@ -10,20 +10,12 @@ export function useActor() {
   const { identity } = useGoogleAuth();
   const queryClient = useQueryClient();
   const actorQuery = useQuery<backendInterface>({
-    queryKey: [ACTOR_QUERY_KEY, identity?.getPrincipal().toString()],
+    queryKey: [ACTOR_QUERY_KEY, identity?.getPrincipal().toString() ?? "anon"],
     queryFn: async () => {
-      const isAuthenticated = !!identity;
-
-      if (!isAuthenticated) {
+      if (!identity) {
         return await createActorWithConfig();
       }
-
-      const actorOptions = {
-        agentOptions: {
-          identity,
-        },
-      };
-
+      const actorOptions = { agentOptions: { identity } };
       const actor = await createActorWithConfig(actorOptions);
       const adminToken = getSecretParameter("caffeineAdminToken") || "";
       await actor._initializeAccessControlWithSecret(adminToken);
@@ -36,20 +28,13 @@ export function useActor() {
   useEffect(() => {
     if (actorQuery.data) {
       queryClient.invalidateQueries({
-        predicate: (query) => {
-          return !query.queryKey.includes(ACTOR_QUERY_KEY);
-        },
+        predicate: (q) => !q.queryKey.includes(ACTOR_QUERY_KEY),
       });
       queryClient.refetchQueries({
-        predicate: (query) => {
-          return !query.queryKey.includes(ACTOR_QUERY_KEY);
-        },
+        predicate: (q) => !q.queryKey.includes(ACTOR_QUERY_KEY),
       });
     }
   }, [actorQuery.data, queryClient]);
 
-  return {
-    actor: actorQuery.data || null,
-    isFetching: actorQuery.isFetching,
-  };
+  return { actor: actorQuery.data || null, isFetching: actorQuery.isFetching };
 }
